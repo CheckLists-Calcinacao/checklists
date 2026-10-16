@@ -19,7 +19,7 @@
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.0.0';
+const VERSAO_APP = '2.1.0';
 
 const CONFIG = {
   equipes: ['A', 'B', 'C', 'D', 'E'],
@@ -270,24 +270,24 @@ const CHECKLISTS = [
     cor: '#1D4ED8',
     campos: ['data', 'turno', 'equipe'],
     assinatura: true,
-    croqui: { obrigatorio: true, maxFotos: 4 },  // fotos tiradas na hora; obrigatorio:false deixa as fotos opcionais
+    croquiRef: true,  // mostra o croqui de válvulas com as fotos de referência
     obsFinal: true,
     secoes: [
       { t: '1 - Estoque', itens: [['1.1', 'Estoque de Nitrogênio maior que 60.000 m³?']] },
       { t: '2 - Combate a incêndio', itens: [['2.1', 'Sistema de combate a incêndio em automático, realizado check com automação?']] },
       { t: '3 - Analisadores de gases', itens: [['3.1', 'Todos os analisadores de gases estão disponíveis sem falha?']] },
       { t: '4 - Portas de visita', itens: [['4.1', 'Realizada conferência de todas as portas de visita (filtro de mangas, GGQ, 771-TA-001, moinho e 771-VE-004)?']] },
-      { t: '5 - Desbloqueio N2/GLP', itens: [['5.1', 'Realizado desbloqueio das linhas de N2/GLP, as válvulas de entrada e saída estão abertas?']] },
+      { t: '5 - Desbloqueio N2/GLP', itens: [['5.1', 'Realizado desbloqueio das linhas de N2/GLP, as válvulas de entrada e saída estão abertas?', { croqui: [2, 3] }]] },
       { t: '6 - Ajuste de pressão N2/GLP', itens: [
-        ['6.1', 'Realizada abertura da válvula de N2 na entrada da planta com pressão de 7,5 bar?'],
-        ['6.2', 'Realizada abertura da válvula de GLP na entrada da planta com pressão de 1,1 bar?']
+        ['6.1', 'Realizada abertura da válvula de N2 na entrada da planta com pressão de 7,5 bar?', { croqui: [3] }],
+        ['6.2', 'Realizada abertura da válvula de GLP na entrada da planta com pressão de 1,1 bar?', { croqui: [2] }]
       ]},
-      { t: '7 - Abertura de válvulas manuais', itens: [['7.1', 'Realizada conferência das aberturas: todas as válvulas manuais de N2 estão nas marcações corretas (FV-006/007/008/009/010/011)?']] },
+      { t: '7 - Abertura de válvulas manuais', itens: [['7.1', 'Realizada conferência das aberturas: todas as válvulas manuais de N2 estão nas marcações corretas (FV-006/007/008/009/010/011)?', { croqui: [4, 5, 6, 7] }]] },
       { t: '8 - Níveis de silo', itens: [['8.1', 'Silos de carvão grosso se encontram acima de 50%?']] },
-      { t: '9 - Ar de combustão da chama', itens: [['9.1', 'Ar radial e axial de combustão se encontram nas posições corretas (Radial 80% / Axial 90%)?']] },
+      { t: '9 - Ar de combustão da chama', itens: [['9.1', 'Ar radial e axial de combustão se encontram nas posições corretas (Radial 80% / Axial 90%)?', { croqui: [9] }]] },
       { t: '10 - Alimentação da T.A', itens: [['10.1', 'Foi realizada conferência da abertura das válvulas de saída de alimentação de carvão grosso (771-FV-001/002/003/004)?']] },
       { t: '11 - Posição dos dampers do GGQ', itens: [['11.1', 'Realizada conferência do posicionamento dos dampers do GGQ, estão com indicação correta conforme setpoint?']] },
-      { t: '12 - Válvulas manuais dos filtros de mangas', itens: [['12.1', 'Foi realizada conferência em todas as válvulas manuais de batimento dos filtros de mangas?']] },
+      { t: '12 - Válvulas manuais dos filtros de mangas', itens: [['12.1', 'Foi realizada conferência em todas as válvulas manuais de batimento dos filtros de mangas?', { croqui: [8] }]] },
       { t: '13 - Moegas de transporte de carvão pulverizado', itens: [['13.1', 'Foi verificado se as chaves de nível das moegas de transporte estão limpas?']] },
       { t: '14 - Compressores e bombas de transporte de carvão', itens: [['14.1', 'As bombas e compressores foram testados e estão prontos para transporte de carvão?']] }
     ]
@@ -344,16 +344,16 @@ const LINKS = [
   }
 ];
 
-/* Croqui de válvulas da Partida: em cada ponto o operador tira as fotos na hora
-   (pela câmera do tablet) mostrando a posição das válvulas. Edite os textos aqui. */
+/* Croqui de válvulas da Partida (fotos de REFERÊNCIA da planilha, para o operador consultar).
+   As fotos ficam no arquivo croqui-fotos.js. */
 const CROQUI = [
-  { n: 1, t: 'Tanque de N2', d: 'Tanque de N2 da entrada da planta' },
-  { n: 2, t: 'Cavalete de entrada GLP', d: 'Posição de válvula aberta, pressão 1,1 bar' },
-  { n: 3, t: 'Cavalete de entrada de N2 na planta', d: 'Válvula de N2 de entrada da planta, posição aberta, pressão 7,4 bar' },
-  { n: 4, t: 'Moinho', d: 'Válvulas de N2 de inertização do moinho na posição correta para partida' },
-  { n: 5, t: 'GGQ / 771-VE-004', d: 'Válvulas de N2 de inertização do GGQ na posição correta para partida' },
-  { n: 6, t: 'Silos', d: 'Válvula de N2 de inertização dos silos na posição correta para partida' },
-  { n: 7, t: 'Inertização dos filtros de mangas', d: 'Válvulas de N2 de inertização dos filtros de mangas na posição correta para partida' },
-  { n: 8, t: 'Válvulas manuais do filtro de mangas', d: 'Válvulas de N2 responsáveis pelo batimento dos filtros de mangas na posição correta para partida' },
-  { n: 9, t: 'Válvulas de combustão da chama', d: 'Posição das válvulas de combustão da chama' }
+  { n: 1, t: 'Tanque de N2', d: 'Tanque de N2 da entrada da planta', fotos: [] },
+  { n: 2, t: 'Cavalete de entrada GLP', d: 'Posição de válvula aberta, pressão 1,1 bar', fotos: ['foto04.jpg'] },
+  { n: 3, t: 'Cavalete de entrada de N2 na planta', d: 'Válvula de N2 de entrada da planta, posição aberta, pressão 7,4 bar', fotos: ['foto09.jpg', 'foto05.jpg'] },
+  { n: 4, t: 'Moinho', d: 'Válvulas de N2 de inertização do moinho na posição correta para partida', fotos: ['foto06.jpg', 'foto07.jpg'] },
+  { n: 5, t: 'GGQ / 771-VE-004', d: 'Válvulas de N2 de inertização do GGQ na posição correta para partida', fotos: ['foto08.jpg', 'foto10.jpg', 'foto12.jpg'] },
+  { n: 6, t: 'Silos', d: 'Válvula de N2 de inertização dos silos na posição correta para partida (FV-002)', fotos: ['foto11.jpg'] },
+  { n: 7, t: 'Inertização dos filtros de mangas', d: 'Válvulas de N2 de inertização dos filtros de mangas na posição correta para partida', fotos: ['foto14.jpg', 'foto13.jpg', 'foto15.jpg'] },
+  { n: 8, t: 'Válvulas manuais do filtro de mangas', d: 'Válvulas de N2 responsáveis pelo batimento dos filtros de mangas na posição correta para partida', fotos: ['foto16.jpg', 'foto17.jpg', 'foto18.jpg', 'foto19.jpg'] },
+  { n: 9, t: 'Válvulas de combustão da chama', d: 'Posição das válvulas de combustão da chama (Radial 80% / Axial 90%)', fotos: ['foto20.jpg', 'foto21.jpg'] }
 ];

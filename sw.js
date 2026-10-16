@@ -1,12 +1,11 @@
 /* Service worker: guarda o app no tablet para funcionar sem internet.
    - Páginas e scripts: tenta a internet primeiro (para pegar atualizações);
      se não tiver rede em 4 s, usa a cópia guardada.
-   - Ícones e bibliotecas: usa a cópia guardada direto. */
-const CACHE = 'checklists-v5';
+   - Ícones e fotos do croqui: usa a cópia guardada direto. */
+const CACHE = 'checklists-v7';
 const ARQUIVOS = [
   './', 'index.html', 'checklists.js', 'manifest.webmanifest',
-  'lib/jspdf.umd.min.js', 'lib/jspdf.plugin.autotable.min.js',
-  'icons/icon-192.png', 'icons/icon-512.png'
+  'icons/icon-192.png', 'icons/icon-512.png', 'croqui-fotos.js'
 ];
 
 self.addEventListener('install', e => {
@@ -27,8 +26,10 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   const url = new URL(req.url);
-  const dinamico = req.mode === 'navigate' || /\.(html|js|webmanifest)$/.test(url.pathname) || url.pathname.endsWith('/');
-  if (dinamico && !url.pathname.includes('/lib/')) {
+  const dinamico = req.mode === 'navigate' || /\.(html|js|webmanifest)$/.test(url.pathname) || url.pathname.endsWith('/')
+    ;
+  const fixo = url.pathname.endsWith('croqui-fotos.js');
+  if (dinamico && !fixo) {
     e.respondWith(
       comTempo(fetch(req, {cache: 'no-cache'}), 4000)
         .then(resp => { if (resp.ok) { const cp = resp.clone(); caches.open(CACHE).then(c => c.put(req, cp)); } return resp; })
