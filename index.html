@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B2A4A">
+<title>Checklists Operacionais</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#EEF2F6; --card:#FFFFFF; --ink:#0F1B2A; --ink2:#4A5B70; --line:#D5DDE6;
+  --navy:#0B2A4A; --navy2:#16406E; --accent:#F2B705;
+  --ok:#15803D; --ok-bg:#DCFCE7; --bad:#B91C1C; --bad-bg:#FEE2E2;
+  --sel:#0B2A4A; --miss:#DC2626; --miss-bg:#FFF1F1;
+  --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top));display:flex;align-items:center;gap:12px;min-height:60px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.top h1{font-size:19px;margin:0;font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{font-size:13px;opacity:.75;font-weight:400}
+.top .btn-top{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:10px;height:44px;padding:0 14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.progress{height:5px;background:rgba(255,255,255,.18);border-radius:3px;overflow:hidden;width:120px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.prog-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:13px}
+main{max-width:1000px;margin:0 auto;padding:16px 16px 110px}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);padding:16px;margin-bottom:14px}
+.card h2{font-size:17px;margin:0 0 12px;font-weight:700;color:var(--navy)}
+.sec-h{display:flex;gap:10px;align-items:flex-start;margin:-16px -16px 8px;padding:14px 16px;border-bottom:1px solid var(--line);background:#F7F9FB;border-radius:var(--r) var(--r) 0 0}
+.sec-h h2{margin:0 !important;flex:1}
+.sec-h .cnt{font-size:13px;color:var(--ink2);white-space:nowrap;padding-top:2px}
+.sec-h .cnt.done{color:var(--ok);font-weight:600}
+.grp{font-size:14px;font-weight:700;color:var(--navy2);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 2px;padding-top:4px}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;padding:12px 0;border-bottom:1px solid #EDF1F5}
+.item:last-child{border-bottom:0}
+.item.missing{background:var(--miss-bg);box-shadow:-16px 0 0 var(--miss-bg),16px 0 0 var(--miss-bg);border-radius:4px}
+.item-txt{font-size:16px}
+.item-txt .num{display:inline-block;min-width:38px;font-weight:700;color:var(--navy2)}
+.item-txt .desc{white-space:pre-line;font-size:14px;color:var(--ink2);margin-top:4px}
+.ans{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+.col{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.col-l{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.03em}
+.seg{display:flex;border:1.5px solid #B8C4D2;border-radius:12px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;min-width:66px;height:48px;padding:0 12px;font-weight:600;font-size:15px;color:var(--ink)}
+.seg button+button{border-left:1.5px solid #B8C4D2}
+.seg button.on{background:var(--sel);color:#fff}
+.seg button.on.ok{background:var(--ok)}
+.seg button.on.bad{background:var(--bad)}
+.missing .seg{border-color:var(--miss)}
+.det{grid-column:1/-1}
+.det input,.det textarea{width:100%}
+input[type=text],input[type=date],input[type=number],input:not([type]),textarea,select{border:1.5px solid #B8C4D2;border-radius:10px;padding:11px 12px;background:#fff;min-height:48px;width:100%}
+textarea{min-height:76px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:3px solid rgba(242,183,5,.5);border-color:var(--navy2)}
+.missing input,.missing textarea,input.missing,textarea.missing{border-color:var(--miss);background:var(--miss-bg)}
+.lbl{font-size:13px;font-weight:700;color:var(--ink2);margin:0 0 6px;display:block;letter-spacing:.02em}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.field.missing .seg{border-color:var(--miss)}
+.field .seg{width:100%}
+.field .seg button{flex:1 1 0;min-width:0;padding:0 6px}
+.verif{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.obs{margin-top:12px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.thumb{border:1.5px solid var(--line);border-radius:10px;padding:0;overflow:hidden;width:110px;height:82px;background:#F1F5F9;display:block}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.cq-bts{flex-direction:column;align-items:stretch}
+.cq-bts .btn{min-height:48px;font-size:15px}
+.missing .cq-bts .btn-p{box-shadow:0 0 0 3px var(--miss)}
+.pdf-box{background:#F4F7FB;border:1px solid #D5DDE6;border-radius:12px;padding:14px;margin-top:16px;text-align:left}
+.pdf-st{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn:disabled{opacity:.45}
+.spin{width:16px;height:16px;border:2.5px solid #C5D2E0;border-top-color:var(--navy);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sync{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px}
+.sync.ok{background:var(--ok-bg);color:var(--ok)}
+.sync.pend,.sync.enviando{background:#FFF4D6;color:#8A5A00}
+.sync.erro{background:var(--bad-bg);color:var(--bad)}
+.pill.pend{background:#FFF4D6;color:#8A5A00}
+.seg.abas{width:100%;background:#fff}
+.seg.abas button{flex:1}
+.croq-btn{margin-top:6px;border:1px solid #9DB4CF;background:#EEF4FB;color:var(--navy2);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600}
+.btn{border:0;border-radius:12px;min-height:52px;padding:0 20px;font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:var(--navy);color:#fff}
+.btn-a{background:var(--accent);color:#1b1400}
+.btn-s{background:#fff;color:var(--navy);border:1.5px solid #9DB4CF}
+.btn-d{background:#fff;color:var(--bad);border:1.5px solid #F1A5A5}
+.btn-w{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.btn{flex:1 1 200px}
+/* home */
+.hello{display:flex;justify-content:space-between;align-items:flex-end;margin:4px 2px 14px;gap:10px;flex-wrap:wrap}
+.hello h2{margin:0;font-size:22px}
+.hello p{margin:2px 0 0;color:var(--ink2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.cl{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;border-top:6px solid var(--c)}
+.cl h3{margin:0;font-size:18px}
+.cl .meta{font-size:13px;color:var(--ink2)}
+.cl .draft{background:#FFF7DB;border:1px solid #F3D46B;border-radius:10px;padding:8px 10px;font-size:14px}
+.cl .row .btn{min-height:50px}
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+.nav a{flex:0 1 200px;text-align:center;padding:10px 0 12px;text-decoration:none;color:var(--ink2);font-size:13px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav a.on{color:var(--navy)}
+.nav a.on svg{stroke:var(--navy)}
+.nav svg{width:26px;height:26px;stroke:#8193A8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* history */
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.filters .full{grid-column:1/-1}
+.reg{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-left:6px solid var(--c);border-radius:12px;padding:12px 14px;margin-bottom:8px;text-decoration:none;color:inherit}
+.reg .t{font-weight:700}
+.reg .m{font-size:14px;color:var(--ink2)}
+.reg .id{margin-left:auto;font-size:12px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.empty{text-align:center;color:var(--ink2);padding:40px 10px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;font-size:15px}
+.kv b{color:var(--ink2);font-weight:600}
+table.ro{width:100%;border-collapse:collapse;font-size:14px}
+table.ro td,table.ro th{border-bottom:1px solid #EDF1F5;padding:8px 6px;text-align:left;vertical-align:top}
+table.ro th{font-size:12px;color:var(--ink2);text-transform:uppercase}
+table.ro td.a{white-space:nowrap;font-weight:600}
+.tag-bad{color:var(--bad)}
+/* calc */
+.calc-res{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.big{background:#F1F6FB;border:1px solid #CFE0F2;border-radius:12px;padding:16px;text-align:center}
+.big .v{font-size:40px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.big .k{font-size:14px;color:var(--ink2);font-weight:600}
+.unit{position:relative}
+.unit input{padding-right:44px;font-size:20px;font-weight:600}
+.unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--ink2);font-weight:600}
+/* signature */
+.sig-wrap{border:1.5px dashed #9DB4CF;border-radius:12px;background:#FBFCFE;position:relative}
+.sig-wrap canvas{display:block;width:100%;height:180px;touch-action:none}
+.sig-wrap .hint{position:absolute;left:14px;bottom:10px;color:#9AA9BA;font-size:13px;pointer-events:none}
+.sig-wrap .clr{position:absolute;right:8px;top:8px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:13px}
+.sig-wrap.missing{border-color:var(--miss)}
+/* modal & toast */
+.ov{position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.mod{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:22px;max-height:90vh;overflow:auto}
+.mod h3{margin:0 0 10px;font-size:19px}
+.mod p{margin:0 0 16px;color:var(--ink2)}
+.mod.wide{max-width:900px}
+.croq{display:grid;gap:18px}
+.croq figure{margin:0}
+.croq .ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-top:8px}
+.croq img{width:100%;border-radius:8px;display:block}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0F1B2A;color:#fff;padding:12px 18px;border-radius:12px;z-index:60;font-weight:600;max-width:90vw;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.done{text-align:center;padding:30px 16px}
+.done .ic{width:84px;height:84px;border-radius:50%;background:var(--ok-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.done h2{margin:0 0 6px}
+.note{font-size:14px;color:var(--ink2)}
+.pill{display:inline-block;background:#E7EEF6;color:var(--navy2);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+@media (max-width:680px){
+  .item{grid-template-columns:1fr}
+  .ans{justify-content:flex-start}
+  .col{align-items:flex-start}
+  .filters{grid-template-columns:1fr 1fr}
+  .filters>:first-child{grid-column:1/-1}
+  .calc-res{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main id="app"></main>
+<nav class="nav" id="nav">
+  <a href="#/" data-v="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</a>
+  <a href="#/hist" data-v="hist"><svg viewBox="0 0 24 24"><path d="M8 3h8l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 11h8M8 15h8M8 7h4"/></svg>Histórico</a>
+  <a href="#/mais" data-v="mais"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Mais</a>
+</nav>
+
+<script src="checklists.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
+<script>
+'use strict';
+/* ================= utilidades ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const hoje = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dataBR = iso => iso ? iso.slice(0,10).split('-').reverse().join('/') : '';
+const horaBR = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const dtBR = iso => { const d = new Date(iso); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const CL = id => CHECKLISTS.find(c => c.id === id);
+/* checklist como estava quando o registro foi salvo (perguntas guardadas no próprio registro) */
+const CLR = r => { const c = CL(r.clId); if (!c) return null; return r.secoes ? {...c, secoes: r.secoes} : c; };
+const num = v => { if (v === '' || v == null) return NaN; let s = String(v).trim(); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const n = Number(s); return s === '' ? NaN : n; };
+const fmtPct = x => isFinite(x) ? (x * 100).toFixed(2).replace('.', ',') + '%' : '—';
+const fmtKg = x => String(x ?? '').trim().replace('.', ',');
+
+function toast(msg, ms = 2600) {
+  $$('.toast').forEach(x => x.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+function modal(html, {wide = false} = {}) {
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="mod ${wide ? 'wide' : ''}">${html}</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  return ov;
+}
+function confirmar(titulo, texto, ok = 'Confirmar', perigo = false) {
+  return new Promise(res => {
+    const ov = modal(`<h3>${titulo}</h3><p>${texto}</p><div class="row"><button class="btn btn-s" data-r="0">Cancelar</button><button class="btn ${perigo ? 'btn-d' : 'btn-p'}" data-r="1">${ok}</button></div>`);
+    ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (b) { ov.remove(); res(b.dataset.r === '1'); } });
+  });
+}
+
+/* ================= banco de dados local (IndexedDB) ================= */
+const DB = {
+  _db: null,
+  open() {
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('checklists-barro-alto', 1);
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        if (!db.objectStoreNames.contains('registros')) db.createObjectStore('registros', {keyPath: 'id'});
+        if (!db.objectStoreNames.contains('rascunhos')) db.createObjectStore('rascunhos', {keyPath: 'clId'});
+      };
+      r.onsuccess = () => { this._db = r.result; res(r.result); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(store, mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode); const s = t.objectStore(store);
+      const req = fn(s); let out;
+      if (req) req.onsuccess = () => { out = req.result; };
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  get: (st, k) => DB.tx(st, 'readonly', s => s.get(k)),
+  all: st => DB.tx(st, 'readonly', s => s.getAll()),
+  put: (st, v) => DB.tx(st, 'readwrite', s => s.put(v)),
+  del: (st, k) => DB.tx(st, 'readwrite', s => s.delete(k))
+};
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+/* nomes já usados (autocompletar) */
+function nomesUsados() { try { return JSON.parse(localStorage.getItem('nomes') || '[]'); } catch { return []; } }
+function guardarNomes(lista) {
+  try {
+    const s = new Set(nomesUsados()); lista.filter(Boolean).forEach(n => s.add(n.trim()));
+    localStorage.setItem('nomes', JSON.stringify([...s].sort().slice(0, 300)));
+  } catch {}
+}
+
+/* ================= estrutura dos checklists ================= */
+function grupos(sec) { return sec.grupos || [{nome: null, itens: sec.itens}]; }
+function itemObj(arr) { const [n, t, o = {}] = arr; return {n, t, ...o}; }
+function opcoesDe(it) { return it.opcoes || OPCOES[it.op || 'SN']; }
+function colsDe(it, sec) { return it.cols || sec.cols || [null]; }
+/* percorre todas as perguntas: cb(sec, si, grupo, gi, item, ii, key) */
+function cadaItem(cl, cb) {
+  (cl.secoes || []).forEach((sec, si) => grupos(sec).forEach((g, gi) => g.itens.forEach((a, ii) => cb(sec, si, g, gi, itemObj(a), ii, `${si}-${gi}-${ii}`))));
+}
+function precisaDetalhe(it, v) { return (it.op === 'NSQ' && v === 'Sim') || (it.op === 'CNC' && v === 'Não conforme'); }
+function rotDetalhe(it) { return it.op === 'CNC' ? 'Motivo da não conformidade' : 'Qual?'; }
+function classeOp(it, v) { if (it.op === 'CNC') return v === 'Conforme' ? 'ok' : 'bad'; return ''; }
+
+function turnoAgora() { const h = new Date().getHours(); return (h >= 7 && h < 19) ? CONFIG.turnos[0] : CONFIG.turnos[1]; }
+function dataTurnoAgora() { const d = new Date(); if (d.getHours() < 7) d.setDate(d.getDate() - 1); return hoje(d); }
+
+function novoRascunho(cl) {
+  return {
+    clId: cl.id, iniciado: new Date().toISOString(),
+    campos: {data: dataTurnoAgora(), turno: turnoAgora(), equipe: '', tag: '', material: ''},
+    resp: {}, det: {}, obsItem: {}, obs: {}, verif: {}, obsFinal: '',
+    calc: {total: '', r25: '', r16: '', amostra: ''},
+    responsavel: '', assinatura: '', fotos: {}
+  };
+}
+
+/* ================= roteamento ================= */
+let F = null; // rascunho em edição
+window.addEventListener('hashchange', rota);
+async function rota() {
+  const h = location.hash.replace(/^#\/?/, '');
+  const [v, p] = h.split('/');
+  $$('.ov').forEach(x => x.remove());
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === (v || 'home')));
+  $('#nav').style.display = (v === 'form' || v === 'ok') ? 'none' : '';
+  window.scrollTo(0, 0);
+  if (v === 'form') return telaForm(p);
+  if (v === 'ok') return telaOk(decodeURIComponent(p));
+  if (v === 'hist') return telaHist();
+  if (v === 'reg') return telaReg(decodeURIComponent(p));
+  if (v === 'mais') return telaMais();
+  if (v === 'setup') return telaSetup(p);
+  return telaHome();
+}
+function topo(titulo, sub = '', extra = '', voltar = false) {
+  $('#top').innerHTML = `${voltar ? `<button class="btn-top" id="bt-voltar" aria-label="Voltar">&#8592;</button>` : ''}
+    <h1>${esc(titulo)}${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</h1>${extra}`;
+  if (voltar) $('#bt-voltar').onclick = () => (typeof voltar === 'function' ? voltar() : history.back());
+}
+
+/* ================= tela inicial ================= */
+async function telaHome() {
+  topo('Checklists Operacionais', aparelho() ? `${CONFIG.local} · ${aparelho()}` : CONFIG.local);
+  const rasc = {}; (await DB.all('rascunhos')).forEach(r => rasc[r.clId] = r);
+  const regs = await DB.all('registros');
+  const hojeStr = hoje();
+  const qtdHoje = regs.filter(r => (r.finalizado || '').slice(0, 10) === hojeStr).length;
+  $('#app').innerHTML = `
+    <div class="hello"><div><h2>Qual checklist vamos fazer?</h2>
+      <p>${new Date().toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'long'})} · turno ${esc(turnoAgora())}</p></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill">${qtdHoje} finalizado(s) hoje neste aparelho</span>
+      <span class="pill pend" id="pill-pend" ${syncCfg() && regs.some(r => r.sync !== 'ok') ? '' : 'hidden'}>${regs.filter(r => r.sync !== 'ok').length} aguardando envio</span>
+      ${syncCfg() ? '' : '<span class="pill pend">Nuvem não configurada</span>'}</div></div>
+    ${aparelho() ? '' : `<div class="card" style="background:#FFF7DB;border-color:#F3D46B;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px"><b>Cadastre este aparelho.</b> Dê um nome (ex.: Tablet 1 – Calcinadores) para saber de onde cada checklist foi feito.</div>
+      <button class="btn btn-p" data-cad="1">Cadastrar aparelho</button></div>`}
+    <div class="grid">${CHECKLISTS.map(cl => {
+      const r = rasc[cl.id];
+      const total = cl.tipo === 'calculo' ? '' : `${contarPerguntas(cl)} perguntas`;
+      return `<div class="cl" style="--c:${cl.cor}">
+        <div><h3>${esc(cl.nome)}</h3><div class="meta">${total}</div></div>
+        ${r ? `<div class="draft">Rascunho salvo em ${dtBR(r.alterado || r.iniciado)}</div>
+          <button class="btn btn-a btn-w" data-cont="${cl.id}">Continuar rascunho</button>
+          <div class="row"><button class="btn btn-d" data-del="${cl.id}">Excluir rascunho</button><button class="btn btn-s" data-novo="${cl.id}">Começar novo</button></div>`
+          : `<button class="btn btn-p btn-w" data-novo="${cl.id}">Começar novo ${cl.tipo === 'calculo' ? 'cálculo' : 'checklist'}</button>`}
+      </div>`; }).join('')}
+      ${(typeof LINKS !== 'undefined' ? LINKS : []).map(l => `<div class="cl" style="--c:${l.cor || '#475569'}">
+        <div><h3>${esc(l.nome)}</h3><div class="meta">${esc(l.desc || '')}</div></div>
+        <a class="btn btn-s btn-w" href="${esc(l.url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir formulário ↗</a>
+        <div class="meta">Abre fora do app e precisa de internet.</div></div>`).join('')}
+    </div>
+    ${instalarBanner()}`;
+  $('#app').onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.cont) location.hash = '#/form/' + b.dataset.cont;
+    if (b.dataset.cad) { if (await pedirAparelho()) telaHome(); return; }
+    if (b.dataset.novo) {
+      const id = b.dataset.novo;
+      if (!aparelho() && !(await pedirAparelho())) return;
+      if (rasc[id] && !(await confirmar('Começar um novo?', 'O rascunho salvo será excluído e um checklist em branco será aberto.', 'Excluir rascunho e começar', true))) return;
+      await DB.del('rascunhos', id);
+      location.hash = '#/form/' + id;
+    }
+    if (b.dataset.del) {
+      if (!(await confirmar('Excluir rascunho?', 'As respostas que ainda não foram finalizadas serão apagadas.', 'Excluir', true))) return;
+      await DB.del('rascunhos', b.dataset.del); toast('Rascunho excluído'); telaHome();
+    }
+    if (b.id === 'bt-inst') instalar();
+  };
+}
+function contarPerguntas(cl) { let n = 0; cadaItem(cl, () => n++); return n; }
+
+/* ================= formulário ================= */
+let salvarTimer = null;
+/* só vira rascunho quando alguém preencheu alguma coisa (data e horário automáticos não contam) */
+function temConteudo(d) {
+  if (!d) return false;
+  const cheio = o => Object.values(o || {}).some(v => Array.isArray(v) ? v.length : String(v ?? '').trim() !== '');
+  return cheio(d.resp) || cheio(d.det) || cheio(d.obsItem) || cheio(d.obs) || cheio(d.verif) || cheio(d.fotos)
+    || !!(d.campos.equipe || d.campos.tag || d.campos.material) || !!(d.obsFinal || '').trim() || !!(d.responsavel || '').trim()
+    || !!d.assinatura || ['total', 'r25', 'r16', 'amostra'].some(k => String(d.calc[k] || '').trim());
+}
+function gravarRascunhoAgora() {
+  clearTimeout(salvarTimer); if (!F) return Promise.resolve();
+  if (temConteudo(F)) { F.alterado = new Date().toISOString(); const s = $('.top .sub'); if (s) s.textContent = 'Rascunho salvo automaticamente'; return DB.put('rascunhos', F); }
+  return DB.del('rascunhos', F.clId);
+}
+function salvarRascunho() { clearTimeout(salvarTimer); salvarTimer = setTimeout(gravarRascunhoAgora, 300); }
+
+async function telaForm(clId) {
+  const cl = CL(clId); if (!cl) return (location.hash = '#/');
+  F = await DB.get('rascunhos', clId);
+  const doRascunho = !!F;
+  if (!F) F = novoRascunho(cl);
+  F.fotos = F.fotos || {};
+  topo(cl.nome, doRascunho ? 'Rascunho salvo automaticamente' : 'Novo – ainda não preenchido', `<div class="prog-wrap"><span id="prog-t"></span><div class="progress"><i id="prog-b"></i></div></div>`,
+    async () => { await gravarRascunhoAgora(); location.hash = '#/'; });
+  const nomes = nomesUsados();
+  let h = `<datalist id="dl-nomes">${nomes.map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+  h += `<div class="card"><h2>Identificação</h2><div class="fields">${cl.campos.map(c => campoHTML(cl, c)).join('')}</div></div>`;
+  if (cl.tipo === 'calculo') h += calcHTML();
+  else cl.secoes.forEach((sec, si) => { h += secaoHTML(cl, sec, si); });
+  if (cl.croqui) h += croquiHTML(cl);
+  if (cl.obsFinal) h += `<div class="card"><h2>Observações / Ações tomadas</h2><textarea data-of placeholder="Opcional">${esc(F.obsFinal)}</textarea></div>`;
+  h += `<div class="card" id="fim"><h2>Responsável</h2>
+    <label class="lbl">Nome de quem preencheu</label>
+    <input type="text" id="resp" list="dl-nomes" autocomplete="off" value="${esc(F.responsavel)}" placeholder="Nome completo">
+    ${cl.assinatura ? `<label class="lbl" style="margin-top:14px">Assinatura (use o dedo)</label>
+      <div class="sig-wrap" id="sigw"><canvas id="sig"></canvas><span class="hint">Assine aqui</span><button class="clr" id="sig-clr" type="button">Limpar</button></div>` : ''}
+    <button class="btn btn-a btn-w" id="bt-fin" style="margin-top:18px;min-height:60px;font-size:18px">Finalizar e salvar</button>
+    <p class="note" style="margin:10px 0 0">Depois de finalizado, o checklist fica travado no histórico e o PDF é salvo na pasta <b>Download</b> do tablet.</p>
+  </div>`;
+  $('#app').innerHTML = h;
+  if (cl.assinatura) assinaturaInit();
+  if (cl.tipo === 'calculo') calcAtualiza();
+  progresso(cl);
+  ligarEventosForm(cl);
+}
+
+function campoHTML(cl, c) {
+  const v = F.campos[c] || '';
+  const seg = (lista, cls = '') => `<div class="seg">${lista.map(o => `<button type="button" class="${v === o ? 'on' : ''}" data-campo="${c}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+  if (c === 'data') return `<div class="field" data-f="data"><label class="lbl">Data</label><input type="date" data-campo-in="data" value="${esc(v)}"></div>`;
+  if (c === 'turno') return `<div class="field" data-f="turno"><label class="lbl">Horário</label>${seg(CONFIG.turnos)}</div>`;
+  if (c === 'equipe') return `<div class="field" data-f="equipe"><label class="lbl">Equipe</label>${seg(CONFIG.equipes)}</div>`;
+  if (c === 'tag') return `<div class="field" data-f="tag"><label class="lbl">Tag do calcinador</label>${seg(cl.tags)}</div>`;
+  if (c === 'material') return `<div class="field" data-f="material"><label class="lbl">Material</label>${seg(cl.materiais)}</div>`;
+  return '';
+}
+
+function secaoHTML(cl, sec, si) {
+  let h = `<section class="card" id="sec-${si}"><div class="sec-h"><h2>${esc(sec.t)}</h2><span class="cnt" id="cnt-${si}"></span></div>`;
+  grupos(sec).forEach((g, gi) => {
+    if (g.nome) h += `<div class="grp">${esc(g.nome)}</div>`;
+    g.itens.forEach((a, ii) => {
+      const it = itemObj(a); const key = `${si}-${gi}-${ii}`;
+      const cols = colsDe(it, sec); const ops = opcoesDe(it);
+      h += `<div class="item" id="it-${key}"><div class="item-txt"><span class="num">${esc(it.n)}</span>${esc(it.t)}
+        ${it.desc ? `<div class="desc">${esc(it.desc)}</div>` : ''}
+</div>
+        <div class="ans">${cols.map((c, ci) => {
+          const k = `${key}-${ci}`; const val = F.resp[k];
+          return `<div class="col">${c ? `<span class="col-l">${esc(c)}</span>` : ''}<div class="seg">${ops.map(o =>
+            `<button type="button" data-k="${k}" data-v="${esc(o)}" class="${val === o ? 'on ' + classeOp(it, o) : ''}">${esc(o)}</button>`).join('')}</div></div>`;
+        }).join('')}</div>
+        ${cols.map((c, ci) => { const k = `${key}-${ci}`; return precisaDetalhe(it, F.resp[k]) ? detHTML(it, k, c) : `<div class="det" id="det-${k}" hidden></div>`; }).join('')}
+        ${it.obsItem ? `<div class="det"><input type="text" data-oi="${key}" value="${esc(F.obsItem[key] || '')}" placeholder="Observações (opcional)"></div>` : ''}
+      </div>`;
+    });
+  });
+  if (sec.obs) h += `<div class="obs"><label class="lbl">Observações / Ações tomadas</label><textarea data-obs="${si}" placeholder="Opcional">${esc(F.obs[si] || '')}</textarea></div>`;
+  if (sec.verif) h += `<div class="verif">${sec.verif.map((v, vi) => `<div data-vf="${si}-${vi}"><label class="lbl">Verificador ${esc(v === 'Verificador' ? '' : v)}</label>
+     <input type="text" list="dl-nomes" autocomplete="off" data-verif="${si}-${vi}" value="${esc(F.verif[`${si}-${vi}`] || '')}" placeholder="Nome"></div>`).join('')}</div>`;
+  return h + `</section>`;
+}
+function detHTML(it, k, c) {
+  return `<div class="det" id="det-${k}"><input type="text" data-det="${k}" value="${esc(F.det[k] || '')}" placeholder="${esc(rotDetalhe(it))}${c ? ' (' + esc(c) + ')' : ''} – obrigatório"></div>`;
+}
+
+function calcHTML() {
+  const c = F.calc;
+  const inp = (k, l, req) => `<div class="field" data-f="calc-${k}"><label class="lbl">${l}${req ? '' : ' (opcional)'}</label><div class="unit"><input inputmode="decimal" data-calc="${k}" value="${esc(c[k])}" placeholder="0,00"><span>kg</span></div></div>`;
+  return `<div class="card"><h2>Medidas (kg)</h2><div class="fields">
+      ${inp('total', 'Peso total', true)}${inp('r25', 'Peso retido 25', true)}${inp('r16', 'Peso retido 16', false)}</div>
+    <div class="calc-res"><div class="big"><div class="k">% Passante 25</div><div class="v" id="p25">—</div></div>
+      <div class="big"><div class="k">% Passante 16</div><div class="v" id="p16">—</div></div></div>
+    <p class="note" id="calc-aviso" style="color:var(--bad);margin:10px 0 0"></p>
+    <label class="lbl" style="margin-top:14px">Identificação da amostra / observações</label>
+    <input type="text" data-calc="amostra" value="${esc(c.amostra)}" placeholder="Opcional"></div>`;
+}
+function calcValores(c) {
+  const t = num(c.total), a = num(c.r25), b = num(c.r16);
+  const p25 = (t > 0 && isFinite(a)) ? 1 - a / t : NaN;
+  const p16 = (t > 0 && isFinite(a) && isFinite(b)) ? 1 - (a + b) / t : NaN;
+  let aviso = '';
+  if (t > 0 && isFinite(a) && a > t) aviso = 'O peso retido 25 é maior que o peso total. Confira os valores.';
+  else if (t > 0 && isFinite(a) && isFinite(b) && a + b > t) aviso = 'A soma dos retidos é maior que o peso total. Confira os valores.';
+  return {t, a, b, p25, p16, aviso};
+}
+function calcAtualiza() {
+  const r = calcValores(F.calc);
+  $('#p25').textContent = fmtPct(r.p25); $('#p16').textContent = fmtPct(r.p16); $('#calc-aviso').textContent = r.aviso;
+}
+
+function ligarEventosForm(cl) {
+  const app = $('#app');
+  app.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k) {
+      const k = b.dataset.k; const v = b.dataset.v;
+      F.resp[k] = v;
+      const [si, gi, ii] = k.split('-').map(Number);
+      const sec = cl.secoes[si]; const it = itemObj(grupos(sec)[gi].itens[ii]);
+      $$(`button[data-k="${k}"]`).forEach(x => { x.className = x.dataset.v === v ? 'on ' + classeOp(it, v) : ''; });
+      const ci = Number(k.split('-')[3]); const c = colsDe(it, sec)[ci];
+      const box = $(`#det-${CSS.escape(k)}`);
+      if (precisaDetalhe(it, v)) { if (box.hidden || !box.innerHTML) { box.outerHTML = detHTML(it, k, c); $(`[data-det="${k}"]`).focus(); } }
+      else { box.hidden = true; box.innerHTML = ''; delete F.det[k]; }
+      $(`#it-${si}-${gi}-${ii}`).classList.remove('missing');
+      progresso(cl); salvarRascunho();
+    } else if (b.dataset.campo) {
+      F.campos[b.dataset.campo] = b.dataset.v;
+      $$(`button[data-campo="${b.dataset.campo}"]`).forEach(x => x.classList.toggle('on', x.dataset.v === b.dataset.v));
+      b.closest('.field').classList.remove('missing'); progresso(cl); salvarRascunho();
+    } else if (b.dataset.cam) {
+      $(`#in-${b.dataset.cam}`).click();
+    } else if (b.dataset.ver) {
+      verFoto(cl, b.dataset.ver);
+    } else if (b.id === 'bt-fin') finalizar(cl);
+  };
+  app.onchange = e => {
+    const t = e.target; if (!t.dataset.foto || !t.files.length) return;
+    adicionarFotos(cl, Number(t.dataset.foto), [...t.files]); t.value = '';
+  };
+  app.oninput = e => {
+    const t = e.target; const d = t.dataset;
+    if (d.det) F.det[d.det] = t.value;
+    else if (d.oi) F.obsItem[d.oi] = t.value;
+    else if (d.obs !== undefined) F.obs[d.obs] = t.value;
+    else if (d.verif) F.verif[d.verif] = t.value;
+    else if (d.of !== undefined) F.obsFinal = t.value;
+    else if (d.campoIn) F.campos[d.campoIn] = t.value;
+    else if (d.calc) { F.calc[d.calc] = t.value; calcAtualiza(); }
+    else if (t.id === 'resp') F.responsavel = t.value;
+    else return;
+    t.classList.remove('missing'); const m = t.closest('.missing'); if (m && t.value.trim()) m.classList.remove('missing');
+    progresso(cl); salvarRascunho();
+  };
+}
+
+/* lista do que falta preencher */
+function pendencias(cl) {
+  const p = [];
+  cl.campos.forEach(c => { if (!F.campos[c]) p.push({sel: `[data-f="${c}"]`, cls: 'missing', txt: 'Identificação'}); });
+  if (cl.tipo === 'calculo') {
+    const r = calcValores(F.calc);
+    if (!(r.t > 0)) p.push({sel: '[data-f="calc-total"]', txt: 'Peso total'});
+    if (!isFinite(r.a)) p.push({sel: '[data-f="calc-r25"]', txt: 'Peso retido 25'});
+    if (r.aviso) p.push({sel: '#calc-aviso', txt: r.aviso});
+  } else {
+    cadaItem(cl, (sec, si, g, gi, it, ii, key) => {
+      colsDe(it, sec).forEach((c, ci) => {
+        const k = `${key}-${ci}`; const v = F.resp[k];
+        if (!v) p.push({sel: `#it-${key}`, txt: `Item ${it.n}`});
+        else if (precisaDetalhe(it, v) && !(F.det[k] || '').trim()) p.push({sel: `#it-${key}`, txt: `Item ${it.n} – ${rotDetalhe(it)}`});
+      });
+    });
+    cl.secoes.forEach((sec, si) => (sec.verif || []).forEach((v, vi) => { if (!(F.verif[`${si}-${vi}`] || '').trim()) p.push({sel: `[data-vf="${si}-${vi}"]`, txt: 'Verificador'}); }));
+    if (cl.croqui && cl.croqui.obrigatorio) CROQUI.forEach(c => { if (!(F.fotos[c.n] || []).length) p.push({sel: `#cq-${c.n}`, txt: `Foto do ponto ${c.n} do croqui`}); });
+  }
+  if (!(F.responsavel || '').trim()) p.push({sel: '#resp', txt: 'Responsável'});
+  if (cl.assinatura && !F.assinatura) p.push({sel: '#sigw', txt: 'Assinatura'});
+  return p;
+}
+function progresso(cl) {
+  let tot = 0, ok = 0;
+  if (cl.tipo !== 'calculo') {
+    const porSec = {};
+    cadaItem(cl, (sec, si, g, gi, it, ii, key) => colsDe(it, sec).forEach((c, ci) => {
+      porSec[si] = porSec[si] || [0, 0]; porSec[si][0]++; tot++;
+      if (F.resp[`${key}-${ci}`]) { porSec[si][1]++; ok++; }
+    }));
+    Object.entries(porSec).forEach(([si, [t, o]]) => { const el = $('#cnt-' + si); if (el) { el.textContent = `${o}/${t}`; el.classList.toggle('done', o === t); } });
+    if (cl.croqui) { const t = CROQUI.length, o = CROQUI.filter(c => (F.fotos[c.n] || []).length).length; tot += t; ok += o;
+      const el = $('#cnt-croqui'); if (el) { el.textContent = `${o}/${t} pontos com foto`; el.classList.toggle('done', o === t); } }
+  } else { tot = 2; const r = calcValores(F.calc); ok = (r.t > 0) + isFinite(r.a); }
+  $('#prog-t').textContent = `${ok}/${tot} respondidos`;
+  $('#prog-b').style.width = (tot ? ok / tot * 100 : 0) + '%';
+}
+
+async function finalizar(cl) {
+  if (!aparelho() && !(await pedirAparelho())) return;
+  $$('.missing').forEach(x => x.classList.remove('missing'));
+  const p = pendencias(cl);
+  if (p.length) {
+    p.forEach(x => { const el = $(x.sel); if (el) el.classList.add('missing'); });
+    const el = $(p[0].sel); if (el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+    toast(p.length === 1 ? `Falta preencher: ${p[0].txt}` : `Faltam ${p.length} campos. Os itens em vermelho precisam ser preenchidos.`, 3500);
+    return;
+  }
+  if (!(await confirmar('Finalizar checklist?', 'Depois de finalizado ele fica salvo no histórico e não pode mais ser alterado.', 'Finalizar e salvar'))) return;
+  clearTimeout(salvarTimer);
+  const agora = new Date();
+  const rec = JSON.parse(JSON.stringify(F));
+  rec.id = `${cl.sigla}-${hoje(agora).replace(/-/g, '')}-${pad(agora.getHours())}${pad(agora.getMinutes())}${pad(agora.getSeconds())}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+  rec.finalizado = agora.toISOString(); rec.nome = cl.nome; rec.versao = VERSAO_APP; rec.tablet = aparelho(); rec.sync = 'pendente'; if (cl.secoes) rec.secoes = JSON.parse(JSON.stringify(cl.secoes)); if (cl.croqui) rec.croquiPts = JSON.parse(JSON.stringify(CROQUI));
+  if (cl.tipo === 'calculo') { const r = calcValores(rec.calc); rec.calc.p25 = r.p25; rec.calc.p16 = r.p16; }
+  await DB.put('registros', rec);
+  await DB.del('rascunhos', cl.id);
+  guardarNomes([rec.responsavel, ...Object.values(rec.verif || {})]);
+  F = null;
+  location.hash = '#/ok/' + encodeURIComponent(rec.id);
+}
+
+/* ================= assinatura ================= */
+function assinaturaInit() {
+  const cv = $('#sig'); const ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr; ctx.scale(dpr, dpr);
+  ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0B1F3A';
+  const hint = $('#sigw .hint');
+  if (F.assinatura) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, w, h); im.src = F.assinatura; hint.hidden = true; }
+  let des = false, last = null;
+  const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.addEventListener('pointerdown', e => { des = true; last = pt(e); cv.setPointerCapture(e.pointerId); hint.hidden = true; ctx.beginPath(); ctx.arc(last[0], last[1], 1.2, 0, 7); ctx.fillStyle = '#0B1F3A'; ctx.fill(); });
+  cv.addEventListener('pointermove', e => { if (!des) return; const p = pt(e); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke(); last = p; });
+  const fim = () => { if (!des) return; des = false;
+    const out = document.createElement('canvas'); out.width = 600; out.height = Math.round(600 * h / w);
+    const o = out.getContext('2d'); o.fillStyle = '#fff'; o.fillRect(0, 0, out.width, out.height); o.drawImage(cv, 0, 0, out.width, out.height);
+    F.assinatura = out.toDataURL('image/jpeg', 0.8); F.assinaturaAR = out.height / out.width; $('#sigw').classList.remove('missing'); salvarRascunho(); };
+  cv.addEventListener('pointerup', fim); cv.addEventListener('pointercancel', fim);
+  $('#sig-clr').onclick = () => { ctx.clearRect(0, 0, w, h); F.assinatura = ''; F.assinaturaAR = 0; hint.hidden = false; salvarRascunho(); };
+}
+
+/* ================= croqui: fotos tiradas na hora ================= */
+function croquiHTML(cl) {
+  return `<section class="card" id="sec-croqui"><div class="sec-h"><h2>Croqui de válvulas – fotos da partida</h2><span class="cnt" id="cnt-croqui"></span></div>
+    <p class="note" style="margin-top:4px">Tire as fotos na hora, mostrando a posição das válvulas em cada ponto. ${cl.croqui.obrigatorio ? 'Pelo menos 1 foto por ponto.' : 'Fotos opcionais.'} Até ${cl.croqui.maxFotos} fotos por ponto.</p>
+    ${CROQUI.map(c => `<div class="item cq" id="cq-${c.n}"><div class="item-txt"><span class="num">${c.n}</span><b>${esc(c.t)}</b><div class="desc">${esc(c.d)}</div>
+      <div class="thumbs" id="th-${c.n}">${thumbsHTML(c.n)}</div></div>
+      <div class="ans cq-bts"><button type="button" class="btn btn-p" data-cam="cam-${c.n}">${icCam} Tirar foto</button>
+        <button type="button" class="btn btn-s" data-cam="gal-${c.n}">Galeria</button>
+        <input type="file" accept="image/*" capture="environment" id="in-cam-${c.n}" data-foto="${c.n}" hidden>
+        <input type="file" accept="image/*" multiple id="in-gal-${c.n}" data-foto="${c.n}" hidden></div></div>`).join('')}
+  </section>`;
+}
+const icCam = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+function thumbsHTML(n) {
+  return (F.fotos[n] || []).map((f, i) => `<button type="button" class="thumb" data-ver="${n}-${i}"><img src="${f.d}" alt="Foto ${i + 1} do ponto ${n}"></button>`).join('');
+}
+function redesenhaThumbs(cl, n) { $('#th-' + n).innerHTML = thumbsHTML(n); $('#cq-' + n).classList.remove('missing'); progresso(cl); }
+
+/* reduz a foto, carimba data/hora e devolve JPEG */
+function processarFoto(file, n) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => {
+      const MAX = 1280; let w = im.naturalWidth, h = im.naturalHeight; const k = Math.min(1, MAX / Math.max(w, h));
+      w = Math.round(w * k); h = Math.round(h * k);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const x = cv.getContext('2d');
+      x.drawImage(im, 0, 0, w, h);
+      const agora = new Date().toISOString(); const fs = Math.max(16, Math.round(w / 40));
+      const txt = `Ponto ${n} · ${dtBR(agora)}`;
+      x.font = `600 ${fs}px sans-serif`; const tw = x.measureText(txt).width;
+      x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, h - fs * 1.8, tw + fs * 1.2, fs * 1.8);
+      x.fillStyle = '#fff'; x.fillText(txt, fs * .6, h - fs * .55);
+      URL.revokeObjectURL(url);
+      res({d: cv.toDataURL('image/jpeg', 0.72), w, h, t: agora});
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('imagem inválida')); };
+    im.src = url;
+  });
+}
+async function adicionarFotos(cl, n, files) {
+  const lista = F.fotos[n] = F.fotos[n] || []; const max = cl.croqui.maxFotos;
+  for (const f of files) {
+    if (lista.length >= max) { toast(`Máximo de ${max} fotos neste ponto`); break; }
+    try { lista.push(await processarFoto(f, n)); } catch (e) { toast('Não foi possível usar essa imagem'); }
+  }
+  redesenhaThumbs(cl, n); salvarRascunho();
+}
+function verFoto(cl, ref) {
+  const [n, i] = ref.split('-').map(Number); const f = (F.fotos[n] || [])[i]; if (!f) return;
+  const ov = modal(`<img src="${f.d}" style="width:100%;border-radius:10px;display:block">
+    <p class="note" style="margin:10px 0">Ponto ${n} – foto ${i + 1} · ${dtBR(f.t)}</p>
+    <div class="row"><button class="btn btn-d" data-r="del">Remover foto</button><button class="btn btn-p" data-r="ok">Fechar</button></div>`, {wide: true});
+  ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return;
+    if (b.dataset.r === 'del') { F.fotos[n].splice(i, 1); redesenhaThumbs(cl, n); salvarRascunho(); }
+    ov.remove(); });
+}
+
+/* ================= tela de concluído ================= */
+async function telaOk(id) {
+  const rec = await DB.get('registros', id); if (!rec) return (location.hash = '#/');
+  topo('Checklist salvo');
+  $('#app').innerHTML = `<div class="card done"><div class="ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+    <h2>${esc(rec.nome)}</h2><p class="note">Registro <b>${esc(rec.id)}</b> salvo no histórico em ${dtBR(rec.finalizado)}.</p>
+    ${syncCfg() ? `<div style="margin-top:10px">${badgeSync(rec)}</div>` : `<p class="note">Sincronização com a nuvem não configurada neste aparelho (Mais → Sincronização).</p>`}
+    ${painelPDF()}
+    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="home">Voltar ao início</button></div>`;
+  $('#app').onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'home') location.hash = '#/'; else acaoPDF(rec, a); };
+  prepararPDF(rec);
+  if (rec.sync !== 'ok') setTimeout(() => sincronizar(), 400);
+}
+
+/* ================= histórico ================= */
+let filtroHist = {cl: '', de: '', ate: '', q: '', lim: 40};
+let escopoHist = 'local', cacheNuvem = null;
+async function telaHist() {
+  if (escopoHist === 'nuvem' && syncCfg()) return telaHistNuvem();
+  topo('Histórico', 'Checklists finalizados neste aparelho');
+  const regs = (await DB.all('registros')).sort((a, b) => b.finalizado.localeCompare(a.finalizado));
+  $('#app').innerHTML = `${abasHist()}<div class="card"><div class="filters">
+      <select id="f-cl"><option value="">Todos os checklists</option>${CHECKLISTS.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>
+      <div><input type="date" id="f-de" title="De"></div><div><input type="date" id="f-ate" title="Até"></div>
+      <input type="text" id="f-q" class="full" placeholder="Buscar por nome, equipe ou número do registro"></div>
+      <div class="note" id="h-cnt"></div></div><div id="h-lista"></div>`;
+  $('#f-cl').value = filtroHist.cl; $('#f-de').value = filtroHist.de; $('#f-ate').value = filtroHist.ate; $('#f-q').value = filtroHist.q;
+  const desenha = () => {
+    const q = filtroHist.q.trim().toLowerCase();
+    const fil = regs.filter(r => (!filtroHist.cl || r.clId === filtroHist.cl)
+      && (!filtroHist.de || r.campos.data >= filtroHist.de) && (!filtroHist.ate || r.campos.data <= filtroHist.ate)
+      && (!q || [r.id, r.responsavel, r.campos.equipe, ...Object.values(r.verif || {})].join(' ').toLowerCase().includes(q)));
+    $('#h-cnt').textContent = `${fil.length} registro(s)`;
+    $('#h-lista').innerHTML = fil.length ? fil.slice(0, filtroHist.lim).map(r => { const cl = CL(r.clId) || {cor: '#888'};
+      return `<a class="reg" style="--c:${cl.cor}" href="#/reg/${encodeURIComponent(r.id)}"><div>
+        <div class="t">${esc(r.nome)}${r.campos.tag ? ' · ' + esc(r.campos.tag) : ''}${r.campos.material ? ' · ' + esc(r.campos.material) : ''}</div>
+        <div class="m">${dataBR(r.campos.data)} · ${esc(r.campos.turno)} · Equipe ${esc(r.campos.equipe)} · ${esc(r.responsavel)}${r.tablet ? ' · ' + esc(r.tablet) : ''}</div>${badgeSync(r)}</div>
+        <div class="id">${esc(r.id)}<br>salvo ${dtBR(r.finalizado)}</div></a>`; }).join('')
+      + (fil.length > filtroHist.lim ? `<button class="btn btn-s btn-w" id="h-mais">Mostrar mais</button>` : '')
+      : `<div class="empty">Nenhum checklist encontrado.</div>`;
+    const m = $('#h-mais'); if (m) m.onclick = () => { filtroHist.lim += 40; desenha(); };
+  };
+  const up = () => { filtroHist = {...filtroHist, cl: $('#f-cl').value, de: $('#f-de').value, ate: $('#f-ate').value, q: $('#f-q').value, lim: 40}; desenha(); };
+  ['#f-cl', '#f-de', '#f-ate'].forEach(s => $(s).onchange = up); $('#f-q').oninput = up;
+  desenha();
+}
+
+async function telaReg(id) {
+  const r = await DB.get('registros', id); if (!r) return (location.hash = '#/hist');
+  const cl = CLR(r);
+  topo(r.nome, r.id, '', true);
+  let h = `<div class="card"><div class="kv">
+    <b>Data</b><span>${dataBR(r.campos.data)}</span><b>Horário</b><span>${esc(r.campos.turno)}</span><b>Equipe</b><span>${esc(r.campos.equipe)}</span>
+    ${r.campos.tag ? `<b>Tag</b><span>${esc(r.campos.tag)}</span>` : ''}${r.campos.material ? `<b>Material</b><span>${esc(r.campos.material)}</span>` : ''}
+    <b>Responsável</b><span>${esc(r.responsavel)}</span><b>Salvo em</b><span>${dtBR(r.finalizado)}</span></div>
+    ${painelPDF()}</div>`;
+  if (cl && cl.tipo === 'calculo') {
+    h += `<div class="card"><table class="ro"><tr><td>Peso total</td><td class="a">${esc(r.calc.total)} kg</td></tr><tr><td>Peso retido 25</td><td class="a">${esc(r.calc.r25)} kg</td></tr>
+      <tr><td>Peso retido 16</td><td class="a">${esc(r.calc.r16 || '—')}${r.calc.r16 ? ' kg' : ''}</td></tr><tr><td>% Passante 25</td><td class="a">${fmtPct(r.calc.p25)}</td></tr>
+      <tr><td>% Passante 16</td><td class="a">${fmtPct(r.calc.p16)}</td></tr>${r.calc.amostra ? `<tr><td>Amostra / obs.</td><td>${esc(r.calc.amostra)}</td></tr>` : ''}</table></div>`;
+  } else if (cl) {
+    cl.secoes.forEach((sec, si) => {
+      h += `<div class="card"><h2>${esc(sec.t)}</h2><table class="ro">`;
+      grupos(sec).forEach((g, gi) => {
+        if (g.nome) h += `<tr><th colspan="2">${esc(g.nome)}</th></tr>`;
+        g.itens.forEach((a, ii) => { const it = itemObj(a); const key = `${si}-${gi}-${ii}`;
+          h += `<tr><td>${esc(it.n)} ${esc(it.t)}${r.obsItem && r.obsItem[key] ? `<div class="note">Obs.: ${esc(r.obsItem[key])}</div>` : ''}</td><td class="a">${respTexto(r, sec, it, key).map(x => `<div class="${/Não conforme/.test(x) ? 'tag-bad' : ''}">${esc(x)}</div>`).join('')}</td></tr>`; });
+      });
+      h += `</table>${r.obs[si] ? `<p><b>Observações:</b> ${esc(r.obs[si])}</p>` : ''}
+        ${sec.verif ? `<p class="note">${sec.verif.map((v, vi) => `Verificador ${v === 'Verificador' ? '' : esc(v)}: <b>${esc(r.verif[`${si}-${vi}`])}</b>`).join(' · ')}</p>` : ''}</div>`;
+    });
+    if (r.croquiPts) h += `<div class="card"><h2>Croqui de válvulas – fotos</h2>${r.croquiPts.map(c => `<div style="margin:12px 0"><b>${c.n} – ${esc(c.t)}</b>
+      <div class="thumbs">${((r.fotos || {})[c.n] || []).map(f => `<a href="${f.d}" target="_blank" class="thumb"><img src="${f.d}"></a>`).join('') || '<span class="note">Sem foto.</span>'}</div></div>`).join('')}</div>`;
+    if (r.obsFinal) h += `<div class="card"><h2>Observações / Ações tomadas</h2><p>${esc(r.obsFinal)}</p></div>`;
+  }
+  if (r.assinatura) h += `<div class="card"><h2>Assinatura</h2><img src="${r.assinatura}" style="max-width:360px;width:100%;border:1px solid var(--line);border-radius:8px"></div>`;
+  $('#app').innerHTML = h;
+  $('#app').onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; acaoPDF(r, a); };
+  prepararPDF(r);
+}
+function abasHist() {
+  if (!syncCfg()) return '';
+  return `<div class="seg abas" style="margin-bottom:12px"><button class="${escopoHist === 'local' ? 'on' : ''}" data-esc="local">Neste aparelho</button><button class="${escopoHist === 'nuvem' ? 'on' : ''}" data-esc="nuvem">Todos os tablets (nuvem)</button></div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-esc]'); if (!b) return; escopoHist = b.dataset.esc; telaHist(); });
+
+async function telaHistNuvem(recarregar = false) {
+  topo('Histórico', 'Checklists de todos os tablets');
+  $('#app').innerHTML = `${abasHist()}<div class="card"><div class="filters">
+      <select id="f-cl"><option value="">Todos os checklists</option>${CHECKLISTS.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>
+      <div><input type="date" id="f-de"></div><div><input type="date" id="f-ate"></div>
+      <input type="text" id="f-q" class="full" placeholder="Buscar por nome, equipe, tablet ou número do registro"></div>
+      <div class="row" style="align-items:center"><div class="note" id="h-cnt" style="flex:1">Carregando da nuvem…</div><button class="btn btn-s" id="h-rec" style="flex:0 0 auto;min-height:44px">Atualizar</button></div></div><div id="h-lista"></div>`;
+  $('#f-cl').value = filtroHist.cl; $('#f-de').value = filtroHist.de; $('#f-ate').value = filtroHist.ate; $('#f-q').value = filtroHist.q;
+  $('#h-rec').onclick = () => { cacheNuvem = null; telaHistNuvem(); };
+  if (!cacheNuvem || recarregar) {
+    try { cacheNuvem = (await api('listar', {limite: 1000})).registros; }
+    catch (e) { $('#h-cnt').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; return; }
+  }
+  const desenha = () => {
+    const q = filtroHist.q.trim().toLowerCase();
+    const fil = cacheNuvem.filter(r => (!filtroHist.cl || r.clId === filtroHist.cl) && (!filtroHist.de || r.data >= filtroHist.de) && (!filtroHist.ate || r.data <= filtroHist.ate)
+      && (!q || [r.id, r.responsavel, r.equipe, r.tablet].join(' ').toLowerCase().includes(q)));
+    $('#h-cnt').textContent = `${fil.length} registro(s) na nuvem`;
+    $('#h-lista').innerHTML = fil.length ? fil.slice(0, filtroHist.lim).map(r => { const cl = CL(r.clId) || {cor: '#888'};
+      return `<div class="reg" style="--c:${cl.cor}"><div style="flex:1;min-width:0">
+        <div class="t">${esc(r.checklist)}${r.extra ? ' · ' + esc(r.extra) : ''}</div>
+        <div class="m">${dataBR(r.data)} · ${esc(r.turno)} · Equipe ${esc(r.equipe)} · ${esc(r.responsavel)}</div>
+        <div class="m">${esc(r.tablet || '')} · salvo ${r.salvoEm ? dtBR(r.salvoEm) : ''}${Number(r.naoConformes) ? ` · <span class="tag-bad">${r.naoConformes} não conforme(s)</span>` : ''}</div></div>
+        <button class="btn btn-s" style="flex:0 0 auto;min-height:44px" data-pdfn="${esc(r.fileId)}" data-nome="${esc(r.id)}">PDF</button></div>`; }).join('')
+      + (fil.length > filtroHist.lim ? `<button class="btn btn-s btn-w" id="h-mais">Mostrar mais</button>` : '')
+      : `<div class="empty">Nenhum checklist encontrado.</div>`;
+    const m = $('#h-mais'); if (m) m.onclick = () => { filtroHist.lim += 40; desenha(); };
+  };
+  const up = () => { filtroHist = {...filtroHist, cl: $('#f-cl').value, de: $('#f-de').value, ate: $('#f-ate').value, q: $('#f-q').value, lim: 40}; desenha(); };
+  ['#f-cl', '#f-de', '#f-ate'].forEach(s => $(s).onchange = up); $('#f-q').oninput = up;
+  $('#h-lista').onclick = e => { const b = e.target.closest('[data-pdfn]'); if (b) abrirPDFNuvem(b.dataset.pdfn, b.dataset.nome); };
+  desenha();
+}
+async function abrirPDFNuvem(fileId, rid) {
+  const ov = modal(`<h3>PDF do registro ${esc(rid)}</h3><div id="pn-st" class="pdf-st"><span class="spin"></span> Baixando da nuvem…</div>
+    <div class="row" style="margin-top:12px"><button class="btn btn-p" data-a="pdf" disabled>Baixar PDF</button><button class="btn btn-a" data-a="share" disabled>Compartilhar</button></div>
+    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="abrir" disabled>Abrir PDF</button>
+    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="fechar">Fechar</button>`);
+  const chave = 'nuvem-' + fileId;
+  ov.addEventListener('click', e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'fechar') ov.remove(); else if (a) acaoPDF({id: chave}, a); });
+  try {
+    if (!pdfCache[chave]) { const j = await api('pdf', {fileId}); pdfCache[chave] = pdfDeBlob(b64Blob(j.pdf, 'application/pdf'), j.nome); }
+    $('#pn-st', ov).innerHTML = `PDF pronto: <b>${esc(pdfCache[chave].nome)}</b>`;
+    $$('[data-a="pdf"],[data-a="share"],[data-a="abrir"]', ov).forEach(b => b.disabled = false);
+    if (!(navigator.canShare && navigator.canShare({files: [pdfCache[chave].file]}))) $('[data-a="share"]', ov).disabled = true;
+  } catch (e) { $('#pn-st', ov).innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+}
+
+function respTexto(r, sec, it, key) {
+  return colsDe(it, sec).map((c, ci) => { const k = `${key}-${ci}`; const v = r.resp[k] || '—'; const d = r.det && r.det[k];
+    return `${c ? c + ': ' : ''}${v}${d ? ' – ' + d : ''}`; });
+}
+
+/* ================= PDF ================= */
+function nomeArquivo(r) {
+  const cl = CL(r.clId); const c = r.campos; const d = new Date(r.finalizado);
+  const extra = c.tag ? '_' + c.tag : c.material ? '_' + c.material.normalize('NFD').replace(/[̀-ͯ]/g, '') : '';
+  const turno = (c.turno || '').replace(/\D+/g, '-').replace(/^-|-$/g, '');
+  return `${cl ? cl.arquivo : 'Checklist'}${extra}_${c.data}_${turno}_Eq${c.equipe}_${pad(d.getHours())}h${pad(d.getMinutes())}.pdf`;
+}
+const pdfTxt = s => String(s ?? '').replace(/⁰/g, '°').replace(/[‐-―]/g, '-').replace(/[^\x00-\xFF\n]/g, '');
+const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+
+function gerarPDF(r) {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit: 'mm', format: 'a4'});
+  const cl = CLR(r); const cor = rgb(cl.cor); const W = 210, M = 12;
+  doc.setFillColor(11, 42, 74); doc.rect(0, 0, W, 24, 'F');
+  doc.setFillColor(...cor); doc.rect(0, 24, W, 1.6, 'F');
+  doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text(pdfTxt((cl.tipo === 'calculo' ? '' : 'CHECK LIST – ') + cl.nome.toUpperCase()), M, 11);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(pdfTxt(CONFIG.local), M, 18);
+  doc.text(pdfTxt('Registro ' + r.id), W - M, 18, {align: 'right'});
+  doc.setTextColor(20);
+  const c = r.campos;
+  const info = [['Data', dataBR(c.data), 'Horário', c.turno], ['Equipe', c.equipe, 'Responsável', r.responsavel]];
+  if (c.tag) info.push(['Tag do calcinador', c.tag, 'Salvo em', dtBR(r.finalizado)]);
+  else if (c.material) info.push(['Material', c.material, 'Salvo em', dtBR(r.finalizado)]);
+  else info.push(['Salvo em', dtBR(r.finalizado), 'Tablet', r.tablet || '-']);
+  if (c.tag || c.material) info.push(['Tablet', r.tablet || '-', '', '']);
+  doc.autoTable({startY: 30, body: info.map(l => l.map(pdfTxt)), theme: 'grid', margin: {left: M, right: M},
+    styles: {fontSize: 9, cellPadding: 1.8, lineColor: [200, 208, 218]},
+    columnStyles: {0: {fontStyle: 'bold', fillColor: [241, 245, 249], cellWidth: 32}, 2: {fontStyle: 'bold', fillColor: [241, 245, 249], cellWidth: 32}}});
+  let y = doc.lastAutoTable.finalY + 5;
+  const base = {theme: 'grid', margin: {left: M, right: M, top: 14, bottom: 16}, styles: {fontSize: 8.5, cellPadding: 1.6, lineColor: [205, 212, 222], valign: 'middle'},
+    headStyles: {fillColor: [22, 64, 110], textColor: 255, fontStyle: 'bold'}};
+
+  if (cl.tipo === 'calculo') {
+    const k = v => v === '' || v == null ? '—' : fmtKg(v) + ' kg';
+    doc.autoTable({...base, startY: y, head: [['Medida', 'Valor']], body: [
+      ['Peso total', k(r.calc.total)], ['Peso retido 25', k(r.calc.r25)], ['Peso retido 16', k(r.calc.r16)],
+      [{content: '% Passante 25', styles: {fontStyle: 'bold'}}, {content: fmtPct(r.calc.p25), styles: {fontStyle: 'bold'}}],
+      [{content: '% Passante 16', styles: {fontStyle: 'bold'}}, {content: fmtPct(r.calc.p16), styles: {fontStyle: 'bold'}}]].map(l => l.map(x => typeof x === 'string' ? pdfTxt(x) : x)),
+      styles: {...base.styles, fontSize: 11, cellPadding: 3}, columnStyles: {1: {halign: 'right', cellWidth: 60}}});
+    y = doc.lastAutoTable.finalY + 5;
+    if (r.calc.amostra) { doc.autoTable({...base, startY: y, body: [[{content: pdfTxt('Amostra / observações: ' + r.calc.amostra)}]]}); y = doc.lastAutoTable.finalY + 5; }
+  } else {
+    cl.secoes.forEach((sec, si) => {
+      const partes = cl.id === 'partes';
+      const tc = (sec.cols || [null]).length;
+      const head = partes ? [['Item', 'Verificação', 'Situação', 'Motivo / Observações']]
+        : [['Nº', 'Verificação', ...(sec.cols || ['Resposta'])]];
+      const body = [];
+      grupos(sec).forEach((g, gi) => {
+        if (g.nome) body.push([{content: pdfTxt(g.nome), colSpan: head[0].length, styles: {fillColor: [232, 238, 246], fontStyle: 'bold', textColor: [22, 64, 110]}}]);
+        g.itens.forEach((a, ii) => {
+          const it = itemObj(a); const key = `${si}-${gi}-${ii}`;
+          if (partes) {
+            const v = r.resp[`${key}-0`] || ''; const mot = [r.det[`${key}-0`], r.obsItem && r.obsItem[key]].filter(Boolean).join(' / ');
+            body.push([pdfTxt(it.n + ' ' + it.t), pdfTxt(it.desc || ''), {content: pdfTxt(v), styles: {fontStyle: 'bold', textColor: v === 'Não conforme' ? [185, 28, 28] : [21, 128, 61]}}, pdfTxt(mot)]);
+            return;
+          }
+          const ic = colsDe(it, sec);
+          const val = ci => { const k = `${key}-${ci}`; const d = r.det && r.det[k]; return (r.resp[k] || '-') + (d ? ' - ' + d : ''); };
+          let cells;
+          if (ic.length === tc && ic === (sec.cols || [null])) cells = ic.map((_, ci) => pdfTxt(val(ci)));
+          else if (ic.length === tc) cells = ic.map((cn, ci) => pdfTxt((cn ? cn + ': ' : '') + val(ci)));
+          else cells = [{content: pdfTxt(ic.map((cn, ci) => (cn ? cn + ': ' : '') + val(ci)).join('   |   ')), colSpan: tc}];
+          body.push([pdfTxt(it.n), pdfTxt(it.t), ...cells]);
+        });
+      });
+      const answerW = partes ? null : (tc === 1 ? 40 : 30);
+      const colStyles = partes ? {0: {cellWidth: 38, fontStyle: 'bold'}, 1: {cellWidth: 72}, 2: {cellWidth: 26}}
+        : Object.assign({0: {cellWidth: 11, fontStyle: 'bold'}}, ...Array.from({length: tc}, (_, i) => ({[i + 2]: {cellWidth: answerW, halign: 'center', fontStyle: 'bold'}})));
+      doc.autoTable({...base, startY: y, head: [[{content: pdfTxt(sec.t), colSpan: head[0].length, styles: {fillColor: [11, 42, 74], fontSize: 9.5}}], ...head.map(l => l.map(pdfTxt))],
+        body, columnStyles: colStyles, rowPageBreak: 'avoid'});
+      y = doc.lastAutoTable.finalY;
+      const extras = [];
+      if (r.obs && r.obs[si]) extras.push([{content: pdfTxt('Observações / Ações tomadas: ' + r.obs[si])}]);
+      if (sec.verif) extras.push([{content: pdfTxt(sec.verif.map((v, vi) => `Verificador${v === 'Verificador' ? '' : ' ' + v}: ${r.verif[`${si}-${vi}`] || ''}`).join('        ')), styles: {fontStyle: 'bold'}}]);
+      if (extras.length) { doc.autoTable({...base, startY: y, body: extras, styles: {...base.styles, fillColor: [248, 250, 252]}}); y = doc.lastAutoTable.finalY; }
+      y += 4;
+    });
+    if (r.obsFinal) { doc.autoTable({...base, startY: y, body: [[{content: pdfTxt('Observações / Ações tomadas: ' + r.obsFinal)}]]}); y = doc.lastAutoTable.finalY + 4; }
+    if (r.croquiPts) y = pdfFotos(doc, r, y, base);
+  }
+  // responsável e assinatura
+  const H = doc.internal.pageSize.getHeight();
+  const need = r.assinatura ? 42 : 14;
+  if (y + need > H - 18) { doc.addPage(); y = 18; }
+  doc.setFontSize(9.5); doc.setFont('helvetica', 'bold'); doc.text(pdfTxt('Responsável pelo preenchimento: ' + r.responsavel), M, y + 5);
+  if (r.assinatura) {
+    let sw = 70, sh = sw * (r.assinaturaAR || 0.25); if (sh > 24) { sw = sw * 24 / sh; sh = 24; }
+    try { doc.addImage(r.assinatura, 'JPEG', M, y + 8, sw, sh); } catch (e) {}
+    doc.setDrawColor(150); doc.line(M, y + 33, M + 80, y + 33); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Assinatura', M, y + 37);
+  }
+  // rodapé
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(110);
+    doc.text(pdfTxt(`${r.nome} · Registro ${r.id} · salvo em ${dtBR(r.finalizado)}`), M, H - 7);
+    doc.text(`Página ${i} de ${n}`, W - M, H - 7, {align: 'right'});
+  }
+  return doc;
+}
+function pdfFotos(doc, r, y, base) {
+  const H = doc.internal.pageSize.getHeight(), W = 210, M = 12, gap = 5, NC = 3, cw = (W - 2 * M - gap * (NC - 1)) / NC, maxH = 62, fim = H - 18;
+  doc.addPage(); y = 14;
+  doc.autoTable({...base, startY: y, head: [[{content: 'Croqui de válvulas - fotos da partida', styles: {fillColor: [11, 42, 74], fontSize: 9.5}}]], body: []});
+  y = doc.lastAutoTable.finalY + 3;
+  r.croquiPts.forEach(c => {
+    const fotos = (r.fotos || {})[c.n] || [];
+    const dims = fotos.map(f => { let w = cw, h = cw * (f.h / f.w); if (h > maxH) { w = w * maxH / h; h = maxH; } return [w, h]; });
+    const primeiraLinha = dims.length ? Math.max(...dims.slice(0, NC).map(d => d[1])) : 6;
+    if (y + 14 + primeiraLinha > fim) { doc.addPage(); y = 14; }
+    doc.autoTable({...base, startY: y, body: [[{content: pdfTxt(`${c.n} - ${c.t}`), styles: {fontStyle: 'bold', fillColor: [232, 238, 246], textColor: [22, 64, 110]}}],
+      [{content: pdfTxt(c.d), styles: {textColor: [80, 90, 105]}}]]});
+    y = doc.lastAutoTable.finalY + 2;
+    if (!fotos.length) { doc.setFontSize(8.5); doc.setTextColor(120); doc.text('Sem foto.', M, y + 4); doc.setTextColor(20); y += 9; return; }
+    for (let i = 0; i < fotos.length; i += NC) {
+      const lh = Math.max(...dims.slice(i, i + NC).map(d => d[1]));
+      if (y + lh > fim) { doc.addPage(); y = 14; }
+      Array.from({length: NC}, (_, c) => i + c).forEach((k, col) => { if (!fotos[k]) return;
+        try { doc.addImage(fotos[k].d, 'JPEG', M + col * (cw + gap), y, dims[k][0], dims[k][1]); } catch (e) {} });
+      y += lh + 4;
+    }
+    y += 2;
+  });
+  return y;
+}
+function baixarArquivo(blob, nome) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+/* O PDF é montado ANTES do toque nos botões. O Chrome do Android só libera
+   download e compartilhamento quando a ação acontece logo após o toque; se o
+   PDF fosse montado na hora (com fotos pode levar alguns segundos), o Chrome
+   bloquearia sem avisar. */
+const pdfCache = {};
+function painelPDF() {
+  return `<div class="pdf-box"><div class="pdf-st" id="pdf-st"><span class="spin"></span> Preparando o PDF…</div>
+    <div class="row" style="margin-top:12px"><button class="btn btn-p" data-a="pdf" disabled>Baixar PDF</button>
+      <button class="btn btn-a" data-a="share" disabled>Compartilhar</button></div>
+    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="abrir" disabled>Abrir PDF</button></div>`;
+}
+function erroPDF(etapa, e) {
+  modal(`<h3>Não foi possível ${etapa}</h3><p>Tente o botão <b>Abrir PDF</b> e, na tela do PDF, use o menu ⋮ → <b>Baixar</b> ou <b>Compartilhar</b>.</p>
+    <p class="note">Detalhe técnico (envie para quem cuida do app): ${esc((e && (e.name + ': ' + e.message)) || e)}</p>
+    <button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`);
+}
+function prepararPDF(r) {
+  const st = () => $('#pdf-st');
+  const pronto = p => { if (!st()) return; st().innerHTML = `PDF pronto: <b>${esc(p.nome)}</b>`; $$('[data-a="pdf"],[data-a="share"],[data-a="abrir"]').forEach(b => b.disabled = false);
+    if (!(navigator.canShare && navigator.canShare({files: [p.file]}))) { const b = $('[data-a="share"]'); b.disabled = true; b.textContent = 'Compartilhar (indisponível)'; } };
+  if (pdfCache[r.id]) return pronto(pdfCache[r.id]);
+  setTimeout(() => {
+    try { pronto(montarPDF(r)); } catch (e) { if (st()) st().innerHTML = '<span class="tag-bad">Erro ao montar o PDF.</span>'; erroPDF('montar o PDF', e); }
+  }, 60);
+}
+function montarPDF(r) {
+  if (pdfCache[r.id]) return pdfCache[r.id];
+  const blob = gerarPDF(r).output('blob'); const nome = nomeArquivo(r);
+  return (pdfCache[r.id] = {blob, nome, file: new File([blob], nome, {type: 'application/pdf'}), url: URL.createObjectURL(blob)});
+}
+function pdfDeBlob(blob, nome) { return {blob, nome, file: new File([blob], nome, {type: 'application/pdf'}), url: URL.createObjectURL(blob)}; }
+function acaoPDF(r, a) {
+  const p = pdfCache[r.id]; if (!a || !['pdf', 'share', 'abrir'].includes(a)) return;
+  if (!p) return toast('Aguarde, o PDF ainda está sendo preparado…');
+  if (a === 'pdf') {
+    try { const el = document.createElement('a'); el.href = p.url; el.download = p.nome; el.rel = 'noopener';
+      document.body.appendChild(el); el.click(); el.remove(); toast('Baixando… o PDF vai para a pasta Download'); }
+    catch (e) { erroPDF('baixar o PDF', e); }
+  } else if (a === 'share') {
+    navigator.share({files: [p.file]}).catch(e => { if (e && e.name !== 'AbortError') erroPDF('compartilhar', e); });
+  } else if (a === 'abrir') {
+    const w = window.open(p.url, '_blank'); if (!w) location.href = p.url;
+  }
+}
+
+/* ================= mais: exportar, backup ================= */
+async function telaMais() {
+  topo('Mais opções');
+  const regs = await DB.all('registros');
+  let persist = false; try { persist = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false; } catch {}
+  const cfg = syncCfg() || {};
+  const pend = regs.filter(r => r.sync !== 'ok').length;
+  $('#app').innerHTML = `
+  <div class="card"><h2>Este aparelho</h2>
+    <div class="kv"><b>Nome</b><span>${aparelho() ? esc(aparelho()) : '<span class="tag-bad">Não cadastrado</span>'}</span></div>
+    <button class="btn btn-s btn-w" data-cad="1" style="margin-top:12px">${aparelho() ? 'Alterar nome do aparelho' : 'Cadastrar aparelho'}</button></div>
+  <div class="card" id="card-sync"><h2>Sincronização (Google Planilha + Drive)</h2>
+    <p class="note" style="margin-top:0">Liga este aparelho à planilha e à pasta do Drive compartilhadas por todos os tablets. Cada checklist finalizado é enviado automaticamente.</p>
+    <label class="lbl">Endereço do App da Web (termina em /exec)</label><input type="text" id="sy-url" value="${esc(cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec">
+    <label class="lbl" style="margin-top:10px">Chave de acesso</label><input type="text" id="sy-chave" value="${esc(cfg.chave || '')}" autocomplete="off" placeholder="Gerada pela função configurar">
+    <label class="lbl" style="margin-top:10px">Nome deste aparelho</label><input type="text" id="sy-tab" value="${esc(aparelho())}" placeholder="Ex.: Tablet 1 – Calcinação">
+    <button class="btn btn-p btn-w" id="sy-salvar" style="margin-top:12px">Salvar e testar conexão</button>
+    <p class="note" id="sy-msg">${cfg.url ? 'Configurado neste aparelho.' : 'Ainda não configurado.'}</p>
+    ${cfg.url ? `<div class="row"><button class="btn btn-s" id="sy-env">Enviar pendentes agora (${pend})</button><button class="btn btn-s" id="sy-link">Link para configurar outro aparelho</button></div>
+    <button class="btn btn-d btn-w" id="sy-off" style="margin-top:10px">Desligar sincronização neste aparelho</button>` : ''}</div>
+  <div class="card"><h2>Exportar para Excel</h2><p class="note" style="margin-top:0">Gera uma planilha (CSV) com todas as respostas do período, uma linha por resposta. Abre no Excel e pode ser usada no Power BI.</p>
+    <div class="filters"><select id="e-cl"><option value="">Todos os checklists</option>${CHECKLISTS.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>
+    <input type="date" id="e-de"><input type="date" id="e-ate"></div>
+    <button class="btn btn-p btn-w" id="bt-csv">Exportar planilha</button></div>
+  <div class="card"><h2>Cópia de segurança</h2><p class="note" style="margin-top:0">Os registros ficam guardados dentro do app. Faça uma cópia de segurança de vez em quando e guarde na rede ou no e-mail. Se o app for reinstalado ou o tablet trocado, é só restaurar.</p>
+    <div class="row"><button class="btn btn-p" id="bt-bkp">Fazer cópia de segurança</button><button class="btn btn-s" id="bt-rest">Restaurar cópia</button></div>
+    <input type="file" id="in-rest" accept=".json,application/json" hidden></div>
+  <div class="card"><h2>Informações</h2><div class="kv"><b>Registros salvos</b><span>${regs.length}</span>
+    <b>Armazenamento protegido</b><span>${persist ? 'Sim' : 'Não (instale o app na tela inicial)'}</span><b>Versão</b><span>${VERSAO_APP}</span>
+    <b>Funcionando offline</b><span id="sw-st">verificando…</span></div>
+    ${instalarBanner()}</div>
+  <div class="card"><h2>Limpar registros antigos</h2><p class="note" style="margin-top:0">Apaga do tablet os registros com mais de 12 meses. Os PDFs já salvos na pasta Download não são apagados. Faça uma cópia de segurança antes.</p>
+    <button class="btn btn-d btn-w" id="bt-limpar">Apagar registros com mais de 12 meses</button></div>`;
+  navigator.serviceWorker && navigator.serviceWorker.getRegistration ? navigator.serviceWorker.getRegistration().then(g => { $('#sw-st').textContent = g && g.active ? 'Sim' : 'Não (abra pelo endereço do site)'; }) : ($('#sw-st').textContent = 'Não');
+  $('#sy-salvar').onclick = async () => {
+    const novo = {url: $('#sy-url').value.trim(), chave: $('#sy-chave').value.trim(), tablet: $('#sy-tab').value.trim()};
+    if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(novo.url)) return toast('Cole o endereço do App da Web (começa com https://script.google.com/)');
+    if (!novo.chave || !novo.tablet) return toast('Preencha a chave e o nome do aparelho');
+    $('#sy-msg').textContent = 'Testando conexão…';
+    try { const j = await api('teste', {}, novo); setSyncCfg(novo); setAparelho(novo.tablet); toast('Conectado ✓'); telaMais(); setTimeout(() => sincronizar(true), 500); }
+    catch (e) { $('#sy-msg').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+  };
+  if ($('#sy-env')) $('#sy-env').onclick = () => sincronizar(true).then(() => telaMais());
+  if ($('#sy-link')) $('#sy-link').onclick = async () => {
+    const link = linkConfig(cfg);
+    if (navigator.share) { try { await navigator.share({title: 'Configurar Checklists', text: 'Abra este link no aparelho para ligá-lo à nuvem dos Checklists: ' + link}); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(link); toast('Link copiado'); } catch { modal(`<h3>Link de configuração</h3><p style="word-break:break-all">${esc(link)}</p><button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`); }
+  };
+  if ($('#sy-off')) $('#sy-off').onclick = async () => { if (await confirmar('Desligar a sincronização?', 'Os registros continuam neste aparelho, mas não serão mais enviados.', 'Desligar', true)) { try { localStorage.removeItem('sync-config'); } catch {} escopoHist = 'local'; telaMais(); } };
+  $('#bt-csv').onclick = () => exportarCSV(regs, $('#e-cl').value, $('#e-de').value, $('#e-ate').value);
+  $('#bt-bkp').onclick = async () => {
+    const blob = new Blob([JSON.stringify({app: 'checklists-barro-alto', versao: VERSAO_APP, gerado: new Date().toISOString(), registros: await DB.all('registros')})], {type: 'application/json'});
+    baixarArquivo(blob, `Backup_Checklists_${hoje()}.json`); toast('Cópia salva em Download');
+  };
+  $('#bt-rest').onclick = () => $('#in-rest').click();
+  $('#in-rest').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.registros)) throw new Error('arquivo inválido');
+      const exist = new Set((await DB.all('registros')).map(r => r.id)); let n = 0;
+      for (const r of j.registros) if (!exist.has(r.id)) { await DB.put('registros', r); n++; }
+      toast(`${n} registro(s) restaurado(s)`); telaMais();
+    } catch (err) { toast('Não foi possível ler o arquivo: ' + err.message); }
+  };
+  $('#bt-limpar').onclick = async () => {
+    const lim = new Date(); lim.setFullYear(lim.getFullYear() - 1); const corte = lim.toISOString();
+    const velhos = regs.filter(r => r.finalizado < corte);
+    if (!velhos.length) return toast('Não há registros com mais de 12 meses.');
+    if (!(await confirmar('Apagar registros antigos?', `${velhos.length} registro(s) serão apagados do tablet. Isso não pode ser desfeito.`, 'Apagar', true))) return;
+    for (const r of velhos) await DB.del('registros', r.id); toast('Registros antigos apagados'); telaMais();
+  };
+  $('#app').onclick = async e => { if (e.target.id === 'bt-inst') instalar(); if (e.target.closest('[data-cad]')) { if (await pedirAparelho()) telaMais(); } };
+}
+/* uma linha por resposta (usada na planilha exportada e na aba Respostas do Google) */
+function linhasRegistro(r) {
+  const L = []; const cl = CLR(r); if (!cl) return L; const c = r.campos;
+  const b = [r.id, r.nome, dataBR(c.data), c.turno, c.equipe, c.tag || c.material || '', r.responsavel, dtBR(r.finalizado)];
+  if (cl.tipo === 'calculo') {
+    [['Peso total (kg)', r.calc.total], ['Peso retido 25 (kg)', r.calc.r25], ['Peso retido 16 (kg)', r.calc.r16],
+     ['% Passante 25', isFinite(r.calc.p25) ? String((r.calc.p25 * 100).toFixed(2)).replace('.', ',') : ''], ['% Passante 16', isFinite(r.calc.p16) ? String((r.calc.p16 * 100).toFixed(2)).replace('.', ',') : ''],
+     ['Amostra / obs.', r.calc.amostra]].forEach(([k, v]) => L.push([...b, 'Granulometria', '', '', k, '', v ?? '', '']));
+    return L;
+  }
+  cl.secoes.forEach((sec, si) => {
+    grupos(sec).forEach((g, gi) => g.itens.forEach((a, ii) => { const it = itemObj(a); const key = `${si}-${gi}-${ii}`;
+      colsDe(it, sec).forEach((cn, ci) => { const k = `${key}-${ci}`;
+        L.push([...b, sec.t, g.nome || '', it.n, it.t, cn || '', r.resp[k] || '', [r.det && r.det[k], r.obsItem && r.obsItem[key]].filter(Boolean).join(' / ')]); }); }));
+    if (r.obs && r.obs[si]) L.push([...b, sec.t, '', 'Obs', 'Observações / Ações tomadas', '', r.obs[si], '']);
+    (sec.verif || []).forEach((v, vi) => L.push([...b, sec.t, '', 'Verificador', 'Verificador', v, r.verif[`${si}-${vi}`] || '', '']));
+  });
+  if (r.croquiPts) r.croquiPts.forEach(cp => L.push([...b, 'Croqui de válvulas', '', 'Ponto ' + cp.n, cp.t, '', ((r.fotos || {})[cp.n] || []).length + ' foto(s)', '']));
+  if (r.obsFinal) L.push([...b, 'Geral', '', 'Obs', 'Observações / Ações tomadas', '', r.obsFinal, '']);
+  return L;
+}
+function contarNaoConformes(r) { return Object.values(r.resp || {}).filter(v => v === 'Não conforme').length; }
+function exportarCSV(regs, clId, de, ate) {
+  const fil = regs.filter(r => (!clId || r.clId === clId) && (!de || r.campos.data >= de) && (!ate || r.campos.data <= ate))
+    .sort((a, b) => a.finalizado.localeCompare(b.finalizado));
+  if (!fil.length) return toast('Nenhum registro no período escolhido.');
+  const q = v => { const s = String(v ?? ''); return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const L = [['Registro', 'Checklist', 'Data', 'Horario', 'Equipe', 'Tag/Material', 'Responsavel', 'Salvo em', 'Secao', 'Grupo', 'Item', 'Pergunta', 'Coluna', 'Resposta', 'Detalhe']];
+  fil.forEach(r => L.push(...linhasRegistro(r)));
+  const csv = '﻿' + L.map(l => l.map(q).join(';')).join('\r\n');
+  baixarArquivo(new Blob([csv], {type: 'text/csv;charset=utf-8'}), `Checklists_${clId || 'todos'}_${de || 'inicio'}_a_${ate || hoje()}.csv`);
+  toast(`${fil.length} registro(s) exportado(s) para Download`);
+}
+
+/* ================= sincronização com Google (Planilha + Drive) ================= */
+/* nome do aparelho (cadastro do tablet) */
+function aparelho() { try { return localStorage.getItem('aparelho-nome') || (syncCfg() || {}).tablet || ''; } catch { return ''; } }
+function setAparelho(n) { try { localStorage.setItem('aparelho-nome', n); const c = syncCfg(); if (c) { c.tablet = n; setSyncCfg(c); } } catch {} }
+function pedirAparelho() {
+  return new Promise(res => {
+    const ov = modal(`<h3>${aparelho() ? 'Nome deste aparelho' : 'Cadastrar este aparelho'}</h3>
+      <p>O nome aparece em cada checklist salvo, no PDF e na planilha, para saber de onde ele foi feito.</p>
+      <input type="text" id="ap-nome" placeholder="Ex.: Tablet 1 – Calcinadores" value="${esc(aparelho())}">
+      <div class="row" style="margin-top:14px"><button class="btn btn-s" data-r="0">Cancelar</button><button class="btn btn-p" data-r="1">Salvar</button></div>`);
+    setTimeout(() => { const i = $('#ap-nome', ov); if (i) i.focus(); }, 60);
+    ov.addEventListener('click', e => {
+      const b = e.target.closest('[data-r]'); if (!b) return;
+      if (b.dataset.r === '1') { const n = $('#ap-nome', ov).value.trim(); if (!n) return toast('Digite o nome do aparelho'); setAparelho(n); ov.remove(); toast('Aparelho cadastrado: ' + n); res(n); }
+      else { ov.remove(); res(null); }
+    });
+  });
+}
+function syncCfg() { try { return JSON.parse(localStorage.getItem('sync-config') || 'null'); } catch { return null; } }
+function setSyncCfg(c) { try { localStorage.setItem('sync-config', JSON.stringify(c)); } catch {} }
+async function api(acao, dados = {}, cfg = syncCfg(), ms = 90000) {
+  if (!cfg || !cfg.url || !cfg.chave) throw new Error('Sincronização não configurada (Mais → Sincronização).');
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const resp = await fetch(cfg.url, {method: 'POST', body: JSON.stringify({acao, chave: cfg.chave, ...dados}), redirect: 'follow', signal: ctl.signal});
+    let j; try { j = await resp.json(); } catch { throw new Error('Resposta inválida do Google. Confira o endereço do App da Web.'); }
+    if (!j.ok) throw new Error(j.erro || 'Erro no servidor');
+    return j;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Tempo esgotado. Verifique a internet.');
+    if (e instanceof TypeError) throw new Error('Sem conexão com o Google. Verifique a internet e o endereço.');
+    throw e;
+  } finally { clearTimeout(t); }
+}
+const blobB64 = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = () => rej(fr.error); fr.readAsDataURL(blob); });
+const b64Blob = (b64, type) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], {type}); };
+
+let sincronizando = false;
+async function sincronizar(manual = false) {
+  const cfg = syncCfg(); if (!cfg || sincronizando) return;
+  sincronizando = true; let enviados = 0, erro = null;
+  try {
+    const pend = (await DB.all('registros')).filter(r => r.sync !== 'ok').sort((a, b) => a.finalizado.localeCompare(b.finalizado));
+    for (const r of pend) {
+      statusSync(r.id, 'enviando');
+      try {
+        const p = montarPDF(r);
+        const reg = {id: r.id, clId: r.clId, checklist: r.nome, data: r.campos.data, turno: r.campos.turno, equipe: r.campos.equipe,
+          extra: r.campos.tag || r.campos.material || '', responsavel: r.responsavel, finalizado: r.finalizado,
+          tablet: r.tablet || aparelho(), naoConformes: contarNaoConformes(r)};
+        const j = await api('salvar', {reg, linhas: linhasRegistro(r), pdf: await blobB64(p.blob), nomePdf: p.nome});
+        r.sync = 'ok'; r.fileId = j.fileId; r.enviadoEm = new Date().toISOString(); delete r.syncErro;
+        await DB.put('registros', r); enviados++; statusSync(r.id, 'ok');
+      } catch (e) {
+        erro = e.message || String(e); r.syncErro = erro; await DB.put('registros', r); statusSync(r.id, 'erro', erro); break;
+      }
+    }
+  } finally { sincronizando = false; }
+  if (manual) toast(erro ? 'Falha no envio: ' + erro : (enviados ? `${enviados} registro(s) enviado(s) ✓` : 'Nada pendente para enviar'), 4000);
+  const pill = $('#pill-pend'); if (pill) { const n = (await DB.all('registros')).filter(r => r.sync !== 'ok').length; pill.hidden = !n; pill.textContent = `${n} aguardando envio`; }
+}
+function statusSync(id, st, msg) {
+  const el = document.querySelector(`[data-sync="${CSS.escape(id)}"]`); if (!el) return;
+  el.className = 'sync ' + st;
+  el.textContent = st === 'ok' ? 'Enviado para a nuvem ✓' : st === 'enviando' ? 'Enviando para a nuvem…' : st === 'erro' ? 'Não enviado: ' + msg + ' (vai tentar de novo sozinho)' : 'Aguardando envio';
+}
+function badgeSync(r) {
+  if (!syncCfg()) return '';
+  const st = r.sync === 'ok' ? 'ok' : r.syncErro ? 'erro' : 'pend';
+  return `<span class="sync ${st}" data-sync="${esc(r.id)}">${st === 'ok' ? 'Enviado ✓' : st === 'erro' ? 'Não enviado' : 'Aguardando envio'}</span>`;
+}
+window.addEventListener('online', () => sincronizar());
+setInterval(() => sincronizar(), 120000);
+setTimeout(() => sincronizar(), 4000);
+
+function linkConfig(cfg) {
+  const enc = btoa(unescape(encodeURIComponent(JSON.stringify({url: cfg.url, chave: cfg.chave})))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return location.origin + location.pathname + '#/setup/' + enc;
+}
+async function telaSetup(enc) {
+  topo('Configurar sincronização');
+  let cfg = null; try { const b = enc.replace(/-/g, '+').replace(/_/g, '/'); cfg = JSON.parse(decodeURIComponent(escape(atob(b + '='.repeat((4 - b.length % 4) % 4))))); } catch {}
+  if (!cfg || !cfg.url) { $('#app').innerHTML = '<div class="card">Link de configuração inválido.</div>'; return; }
+  $('#app').innerHTML = `<div class="card"><h2>Ligar este aparelho à nuvem</h2>
+    <p class="note">Este link liga o aparelho à mesma planilha e pasta do Drive dos outros tablets. Dê um nome para identificar este aparelho.</p>
+    <label class="lbl">Nome deste aparelho</label><input type="text" id="st-nome" placeholder="Ex.: Tablet 2 – Calcinação ou Gerência – celular" value="${esc(aparelho())}">
+    <button class="btn btn-p btn-w" id="st-ok" style="margin-top:14px">Salvar e testar</button><p class="note" id="st-msg"></p></div>`;
+  $('#st-ok').onclick = async () => {
+    const nome = $('#st-nome').value.trim(); if (!nome) return toast('Digite um nome para o aparelho');
+    const novo = {url: cfg.url, chave: cfg.chave, tablet: nome}; $('#st-msg').textContent = 'Testando conexão…';
+    try { const j = await api('teste', {}, novo); setSyncCfg(novo); setAparelho(nome); $('#st-msg').textContent = `Conectado à planilha "${j.planilha}" ✓`; toast('Aparelho configurado ✓'); setTimeout(() => location.hash = '#/', 1200); }
+    catch (e) { $('#st-msg').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+  };
+}
+
+/* ================= instalação (PWA) ================= */
+let promptInstalar = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; });
+function instalarBanner() {
+  const inst = window.matchMedia('(display-mode: standalone)').matches;
+  if (inst) return '';
+  return `<div class="card" style="margin-top:14px;background:#FFF7DB;border-color:#F3D46B"><b>Dica:</b> instale este app na tela inicial do tablet para ele abrir sem internet e proteger os registros.
+    <button class="btn btn-p btn-w" id="bt-inst" style="margin-top:10px">Instalar na tela inicial</button></div>`;
+}
+async function instalar() {
+  if (promptInstalar) { promptInstalar.prompt(); await promptInstalar.userChoice; promptInstalar = null; }
+  else modal(`<h3>Instalar na tela inicial</h3><p>No Chrome, toque nos <b>três pontinhos ⋮</b> no canto superior direito e escolha <b>“Instalar app”</b> ou <b>“Adicionar à tela inicial”</b>.</p><button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Entendi</button>`);
+}
+
+/* ================= service worker (offline) ================= */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw && nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão instalada. Feche e abra o app para atualizar.', 5000);
+      });
+    });
+  }).catch(() => {});
+}
+
+rota();
+</script>
+</body>
+</html>
