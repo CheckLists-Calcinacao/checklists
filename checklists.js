@@ -19,13 +19,22 @@
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.1.0';
+const VERSAO_APP = '2.2.0';
 
 const CONFIG = {
   equipes: ['A', 'B', 'C', 'D', 'E'],
   turnos: ['07 às 19', '19 às 07'],
+  empresa: 'Anglo American',
   local: 'Barro Alto · Calcinação e Pulverização'
 };
+
+/* Áreas da tela inicial: título, cor da barrinha e ordem.
+   Cada checklist (e cada link) diz a sua área no campo "area". */
+const AREAS = [
+  { id: 'calcinacao', nome: 'Calcinadores', cor: '#C2410C' },
+  { id: 'pulverizacao', nome: 'Pulverização', cor: '#1D4ED8' },
+  { id: 'granulometria', nome: 'Granulometria', cor: '#0F766E' }
+];
 
 const OPCOES = {
   SN: ['Sim', 'Não'],
@@ -42,6 +51,7 @@ const CHECKLISTS = [
   /* ------------------------------------------------------------------ */
   {
     id: 'fornos',
+    area: 'calcinacao',
     nome: 'Fornos Calcinadores',
     arquivo: 'Fornos_Calcinadores',
     sigla: 'FOR',
@@ -156,10 +166,11 @@ const CHECKLISTS = [
   /* ------------------------------------------------------------------ */
   {
     id: 'pulverizacao',
+    area: 'pulverizacao',
     nome: 'Planta de Pulverização de Carvão',
     arquivo: 'Pulverizacao_Carvao',
     sigla: 'PUL',
-    cor: '#334155',
+    cor: '#1D4ED8',
     campos: ['data', 'turno', 'equipe'],
     assinatura: true,
     secoes: [
@@ -264,6 +275,7 @@ const CHECKLISTS = [
   /* ------------------------------------------------------------------ */
   {
     id: 'partida',
+    area: 'pulverizacao',
     nome: 'Partida da Pulverização de Carvão',
     arquivo: 'Partida_Pulverizacao',
     sigla: 'PAR',
@@ -296,10 +308,11 @@ const CHECKLISTS = [
   /* ------------------------------------------------------------------ */
   {
     id: 'partes',
+    area: 'calcinacao',
     nome: 'Partes Atreladas ao Calcinador',
     arquivo: 'Partes_Atreladas_Calcinador',
     sigla: 'PAC',
-    cor: '#7C3AED',
+    cor: '#C2410C',
     campos: ['tag', 'data', 'turno', 'equipe'],
     tags: ['411', '412'],
     assinatura: false,
@@ -322,6 +335,7 @@ const CHECKLISTS = [
   /* ------------------------------------------------------------------ */
   {
     id: 'granulometria',
+    area: 'granulometria',
     nome: 'Cálculo Granulometria – Minério e Carvão',
     arquivo: 'Granulometria',
     sigla: 'GRA',
@@ -340,7 +354,8 @@ const LINKS = [
     nome: 'Formulário Granulometria – Minério e Carvão',
     desc: 'Preenchimento da análise granulométrica no Microsoft Forms',
     url: 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=JuF8kDJgY0KMSSZJHa1diDnbYPp7m6dBmuQku5NSDVRUOFcwTDY1RUJLUFFYNEVNMVBHVk1XQVhFQS4u',
-    cor: '#0F766E'
+    cor: '#0F766E',
+    area: 'granulometria'
   }
 ];
 
