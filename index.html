@@ -739,6 +739,7 @@ async function rota() {
   if (v === 'reg') return telaReg(decodeURIComponent(p));
   if (v === 'mais') return telaMais();
   if (v === 'setup') return telaSetup(p);
+  if (v === 'gerenciar') return telaGerenciar();
   return telaHome();
 }
 function topo(titulo, sub = '', extra = '', voltar = false) {
@@ -761,6 +762,7 @@ async function telaHome() {
       <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill">${qtdHoje} finalizado(s) hoje neste aparelho</span>
       <span class="pill pend" id="pill-pend" ${syncCfg() && regs.some(r => r.sync !== 'ok') ? '' : 'hidden'}>${regs.filter(r => r.sync !== 'ok').length} aguardando envio</span>
       ${syncCfg() ? '' : '<span class="pill pend">Nuvem não configurada</span>'}</div></div>
+    ${aparelhoBloqueado() ? `<div class="card" style="background:var(--bad-bg);border-color:#F1A5A5"><b class="tag-bad">Este aparelho foi bloqueado pelo gerenciamento.</b> Os checklists continuam sendo salvos aqui, mas não são enviados para a nuvem. Procure o responsável pelo sistema.</div>` : ''}
     ${aparelho() ? '' : `<div class="card" style="background:#FFF7DB;border-color:#F3D46B;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <div style="flex:1;min-width:220px"><b>Cadastre este aparelho.</b> Dê um nome (ex.: Tablet 1 – Calcinadores) para saber de onde cada checklist foi feito.</div>
       <button class="btn btn-p" data-cad="1">Cadastrar aparelho</button></div>`}
@@ -1474,6 +1476,8 @@ async function telaMais() {
   const cfg = syncCfg() || {};
   const pend = regs.filter(r => r.sync !== 'ok').length;
   $('#app').innerHTML = `
+  ${syncCfg() ? `<div class="card"><h2>Gerenciamento</h2><p class="note" style="margin-top:0">Lista dos aparelhos ligados à nuvem, com último envio, renomear e bloquear. Acesso com login.</p>
+    <a class="btn btn-s btn-w" href="#/gerenciar" style="text-decoration:none">Gerenciar dispositivos</a></div>` : ''}
   <div class="card"><h2>Este aparelho</h2>
     <div class="kv"><b>Nome</b><span>${aparelho() ? esc(aparelho()) : '<span class="tag-bad">Não cadastrado</span>'}</span></div>
     <button class="btn btn-s btn-w" data-cad="1" style="margin-top:12px">${aparelho() ? 'Alterar nome do aparelho' : 'Cadastrar aparelho'}</button></div>
@@ -1573,6 +1577,15 @@ function exportarCSV(regs, clId, de, ate) {
 }
 
 /* ================= sincronização com Google (Planilha + Drive) ================= */
+/* identificação única do aparelho (gerada uma vez, usada no cadastro de dispositivos) */
+function dispositivoId() {
+  try {
+    let id = localStorage.getItem('aparelho-id');
+    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); localStorage.setItem('aparelho-id', id); }
+    return id;
+  } catch { return ''; }
+}
+function aparelhoBloqueado() { try { return localStorage.getItem('aparelho-bloqueado') === '1'; } catch { return false; } }
 /* nome do aparelho (cadastro do tablet) */
 function aparelho() { try { return localStorage.getItem('aparelho-nome') || (syncCfg() || {}).tablet || ''; } catch { return ''; } }
 function setAparelho(n) { try { localStorage.setItem('aparelho-nome', n); const c = syncCfg(); if (c) { c.tablet = n; setSyncCfg(c); } } catch {} }
@@ -1596,9 +1609,14 @@ async function api(acao, dados = {}, cfg = syncCfg(), ms = 90000) {
   if (!cfg || !cfg.url || !cfg.chave) throw new Error('Sincronização não configurada (Mais → Sincronização).');
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
   try {
-    const resp = await fetch(cfg.url, {method: 'POST', body: JSON.stringify({acao, chave: cfg.chave, ...dados}), redirect: 'follow', signal: ctl.signal});
+    const corpo = {acao, chave: cfg.chave, dispositivo: dispositivoId(), tablet: cfg.tablet || aparelho(), versao: VERSAO_APP, ...dados};
+    const resp = await fetch(cfg.url, {method: 'POST', body: JSON.stringify(corpo), redirect: 'follow', signal: ctl.signal});
     let j; try { j = await resp.json(); } catch { throw new Error('Resposta inválida do Google. Confira o endereço do App da Web.'); }
-    if (!j.ok) throw new Error(j.erro || 'Erro no servidor');
+    const antes = aparelhoBloqueado() + '|' + aparelho();
+    try { if (j.bloqueado) localStorage.setItem('aparelho-bloqueado', '1'); else if (j.ok && !acao.startsWith('adm')) localStorage.removeItem('aparelho-bloqueado'); } catch {}
+    if (j.ok && j.nomeDefinido && j.nomeDefinido !== aparelho()) setAparelho(j.nomeDefinido);
+    if (antes !== aparelhoBloqueado() + '|' + aparelho() && /^#?\/?$/.test(location.hash)) setTimeout(telaHome, 0);
+    if (!j.ok) { const er = new Error(j.erro || 'Erro no servidor'); er.sessao = !!j.sessao; throw er; }
     return j;
   } catch (e) {
     if (e.name === 'AbortError') throw new Error('Tempo esgotado. Verifique a internet.');
@@ -1654,6 +1672,10 @@ async function limpezaAutomatica() {
   } catch (e) {}
 }
 setTimeout(limpezaAutomatica, 15000);
+/* sinal de vida: mantém "Último contato" atualizado na tela de dispositivos */
+function sinalDeVida() { if (syncCfg() && navigator.onLine !== false) api('teste', {}, syncCfg(), 30000).catch(() => {}); }
+setTimeout(sinalDeVida, 6000);
+setInterval(sinalDeVida, 30 * 60000);
 setInterval(() => sincronizar(), 120000);
 setTimeout(() => sincronizar(), 4000);
 
@@ -1674,6 +1696,77 @@ async function telaSetup(enc) {
     const novo = {url: cfg.url, chave: cfg.chave, tablet: nome}; $('#st-msg').textContent = 'Testando conexão…';
     try { const j = await api('teste', {}, novo); setSyncCfg(novo); setAparelho(nome); $('#st-msg').textContent = `Conectado à planilha "${j.planilha}" ✓`; toast('Aparelho configurado ✓'); setTimeout(() => location.hash = '#/', 1200); }
     catch (e) { $('#st-msg').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+  };
+}
+
+/* ================= gerenciamento de dispositivos (com login) ================= */
+function admToken() { try { return sessionStorage.getItem('adm-token') || ''; } catch { return ''; } }
+function setAdmToken(t) { try { t ? sessionStorage.setItem('adm-token', t) : sessionStorage.removeItem('adm-token'); } catch {} }
+async function admApi(acao, dados = {}) {
+  try { return await api(acao, {token: admToken(), ...dados}); }
+  catch (e) { if (e.sessao) { setAdmToken(''); telaGerenciar(); } throw e; }
+}
+async function telaGerenciar() {
+  topo('Gerenciar dispositivos', 'Acesso restrito', '', () => { location.hash = '#/mais'; });
+  if (!syncCfg()) { $('#app').innerHTML = '<div class="card">Ligue este aparelho à nuvem primeiro (Mais → Sincronização).</div>'; return; }
+  if (!admToken()) {
+    $('#app').innerHTML = `<div class="card" style="max-width:460px;margin:20px auto"><h2>Entrar no gerenciamento</h2>
+      <label class="lbl">Usuário</label><input type="text" id="adm-u" autocomplete="username" autocapitalize="off">
+      <label class="lbl" style="margin-top:12px">Senha</label><input type="password" id="adm-s" autocomplete="current-password">
+      <button class="btn btn-p btn-w" id="adm-ok" style="margin-top:16px">Entrar</button><p class="note" id="adm-msg"></p></div>`;
+    const entrar = async () => {
+      $('#adm-msg').textContent = 'Conferindo…';
+      try { const j = await api('admLogin', {usuario: $('#adm-u').value.trim(), senha: $('#adm-s').value}); setAdmToken(j.token); telaGerenciar(); }
+      catch (e) { $('#adm-msg').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+    };
+    $('#adm-ok').onclick = entrar; $('#adm-s').onkeydown = e => { if (e.key === 'Enter') entrar(); };
+    return;
+  }
+  $('#app').innerHTML = `<div class="card"><div class="row" style="align-items:center"><div style="flex:1"><h2 style="margin:0">Dispositivos cadastrados</h2>
+      <div class="note" id="dv-cnt">Carregando…</div></div>
+      <button class="btn btn-s" id="dv-at" style="flex:0 0 auto;min-height:44px">Atualizar</button><button class="btn btn-s" id="dv-sair" style="flex:0 0 auto;min-height:44px">Sair</button></div></div>
+    <div id="dv-lista"></div>
+    <div class="card note"><b>Bloquear:</b> o aparelho não consegue mais enviar nem ver os dados da nuvem; os checklists ficam guardados nele até ser desbloqueado.
+      <b>Renomear:</b> o novo nome passa a valer no aparelho no próximo contato com a nuvem.
+      <b>Excluir da lista:</b> use para aparelhos de teste ou desativados. Se o aparelho voltar a se conectar, ele reaparece; para impedir, bloqueie.</div>`;
+  $('#dv-sair').onclick = () => { setAdmToken(''); location.hash = '#/mais'; };
+  $('#dv-at').onclick = () => telaGerenciar();
+  let lista;
+  try { lista = (await admApi('admListar')).dispositivos; } catch (e) { if (!e.sessao) $('#dv-cnt').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; return; }
+  const eu = dispositivoId();
+  lista.sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
+  $('#dv-cnt').textContent = `${lista.length} aparelho(s) · ${lista.filter(d => d.status === 'Bloqueado').length} bloqueado(s)`;
+  $('#dv-lista').innerHTML = lista.map(d => {
+    const bloq = d.status === 'Bloqueado'; const dias = d.ultimo ? Math.floor((Date.now() - new Date(d.ultimo)) / 864e5) : null;
+    return `<div class="reg" style="--c:${bloq ? 'var(--bad)' : 'var(--ok)'};flex-wrap:wrap"><div style="flex:1;min-width:230px">
+      <div class="t">${esc(d.nome || '(sem nome)')}${d.id === eu ? ' <span class="pill">este aparelho</span>' : ''} <span class="sync ${bloq ? 'erro' : 'ok'}">${bloq ? 'Bloqueado' : 'Ativo'}</span></div>
+      <div class="m">Último contato: ${d.ultimo ? dtBR(d.ultimo) : '—'}${dias != null && dias > 7 ? ` <span class="tag-warn">(há ${dias} dias)</span>` : ''} · Último envio: ${d.envio ? dtBR(d.envio) : '—'}</div>
+      <div class="m">Cadastrado em ${d.primeiro ? dtBR(d.primeiro) : '—'} · versão ${esc(d.versao || '—')}</div></div>
+      <div class="row" style="flex:0 0 auto;gap:6px">
+        <button class="btn btn-s" style="min-height:44px" data-dv="ren" data-id="${esc(d.id)}" data-nome="${esc(d.nome)}">Renomear</button>
+        ${d.id === eu ? '' : `<button class="btn ${bloq ? 'btn-p' : 'btn-d'}" style="min-height:44px" data-dv="${bloq ? 'desb' : 'bloq'}" data-id="${esc(d.id)}" data-nome="${esc(d.nome)}">${bloq ? 'Desbloquear' : 'Bloquear'}</button>
+        <button class="btn btn-d" style="min-height:44px" data-dv="exc" data-id="${esc(d.id)}" data-nome="${esc(d.nome)}">Excluir da lista</button>`}</div></div>`;
+  }).join('') || '<div class="empty">Nenhum aparelho cadastrado ainda.</div>';
+  $('#dv-lista').onclick = async e => {
+    const b = e.target.closest('[data-dv]'); if (!b) return; const {dv, id, nome} = b.dataset;
+    try {
+      if (dv === 'ren') {
+        const novo = await new Promise(res => { const ov = modal(`<h3>Renomear aparelho</h3><input type="text" id="dv-n" value="${esc(nome)}">
+          <div class="row" style="margin-top:14px"><button class="btn btn-s" data-r="0">Cancelar</button><button class="btn btn-p" data-r="1">Salvar</button></div>`);
+          ov.addEventListener('click', ev => { const x = ev.target.closest('[data-r]'); if (!x) return; const v = $('#dv-n', ov).value.trim(); ov.remove(); res(x.dataset.r === '1' ? v : null); }); });
+        if (!novo) return;
+        await admApi('admRenomear', {id, nome: novo}); if (id === eu) setAparelho(novo); toast('Nome alterado');
+      } else if (dv === 'bloq') {
+        if (!(await confirmar('Bloquear aparelho?', `<b>${esc(nome)}</b> não poderá mais enviar nem ver os dados da nuvem até ser desbloqueado.`, 'Bloquear', true))) return;
+        await admApi('admBloquear', {id}); toast('Aparelho bloqueado');
+      } else if (dv === 'desb') {
+        await admApi('admDesbloquear', {id}); toast('Aparelho desbloqueado');
+      } else if (dv === 'exc') {
+        if (!(await confirmar('Excluir da lista?', `<b>${esc(nome)}</b> sai da lista. Se ele voltar a se conectar, aparece de novo. Para impedir o acesso, use Bloquear.`, 'Excluir', true))) return;
+        await admApi('admExcluir', {id}); toast('Aparelho excluído da lista');
+      }
+      telaGerenciar();
+    } catch (er) { if (!er.sessao) toast('Erro: ' + er.message, 4000); }
   };
 }
 

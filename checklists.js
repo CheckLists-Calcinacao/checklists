@@ -22,7 +22,7 @@
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.3.0';
+const VERSAO_APP = '2.4.0';
 
 const CONFIG = {
   equipes: ['ADM', 'A', 'B', 'C', 'D'],
