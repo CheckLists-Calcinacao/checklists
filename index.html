@@ -135,6 +135,8 @@ table.ro td,table.ro th{border-bottom:1px solid #EDF1F5;padding:8px 6px;text-ali
 table.ro th{font-size:12px;color:var(--ink2);text-transform:uppercase}
 table.ro td.a{white-space:nowrap;font-weight:600}
 .tag-bad{color:var(--bad)}
+.tag-ok{color:var(--ok)}
+.tag-warn{color:#A16207}
 /* calc */
 .calc-res{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 .big{background:#F1F6FB;border:1px solid #CFE0F2;border-radius:12px;padding:16px;text-align:center}
@@ -689,8 +691,23 @@ function cadaItem(cl, cb) {
 function precisaDetalhe(it, v) { return (it.op === 'NSQ' && v === 'Sim') || (it.op === 'CNC' && v === 'Não conforme'); }
 function rotDetalhe(it) { return it.op === 'CNC' ? 'Motivo da não conformidade' : 'Qual?'; }
 /* cor do botão selecionado: Sim/Conforme/Adequado = verde · Não/Não conforme/Falta = vermelho · Excesso/Baixo = amarelo (alerta) */
-const COR_RESPOSTA = {'Sim': 'ok', 'Conforme': 'ok', 'Adequado': 'ok', 'Não': 'bad', 'Não conforme': 'bad', 'Falta': 'bad', 'Excesso': 'warn', 'Baixo': 'warn'};
-function classeOp(it, v) { return COR_RESPOSTA[v] || ''; }
+/* Sim/Não: verde quando a resposta é a NORMAL para a pergunta, vermelho quando é anormal.
+   Normal = "Sim", exceto perguntas marcadas com inv:true no checklists.js e as de "Não/Sim + Qual?" (normal = "Não"). */
+const COR_RESPOSTA = {'Conforme': 'ok', 'Adequado': 'ok', 'Não conforme': 'bad', 'Falta': 'bad', 'Excesso': 'warn', 'Baixo': 'warn'};
+function classeOp(it, v) {
+  if (v === 'Sim' || v === 'Não') { const normal = (it.inv || it.op === 'NSQ') ? 'Não' : 'Sim'; return v === normal ? 'ok' : 'bad'; }
+  if (it.op === 'SEF' && v === 'Sim') return 'ok';
+  return COR_RESPOSTA[v] || '';
+}
+/* respostas fora do padrão (vermelhas ou amarelas) de um registro */
+function foraDoPadrao(r) {
+  const out = []; const cl = CLR(r); if (!cl || !cl.secoes) return out;
+  cadaItem(cl, (sec, si, g, gi, it, ii, key) => colsDe(it, sec).forEach((c, ci) => {
+    const v = (r.resp || {})[`${key}-${ci}`]; const k = classeOp(it, v);
+    if (k === 'bad' || k === 'warn') out.push({n: it.n, t: it.t, col: c, v, grupo: g.nome});
+  }));
+  return out;
+}
 
 function turnoAgora() { const h = new Date().getHours(); return (h >= 7 && h < 19) ? CONFIG.turnos[0] : CONFIG.turnos[1]; }
 function dataTurnoAgora() { const d = new Date(); if (d.getHours() < 7) d.setDate(d.getDate() - 1); return hoje(d); }
@@ -1005,7 +1022,8 @@ async function finalizar(cl) {
     toast(p.length === 1 ? `Falta preencher: ${p[0].txt}` : `Faltam ${p.length} campos. Os itens em vermelho precisam ser preenchidos.`, 3500);
     return;
   }
-  if (!(await confirmar('Finalizar checklist?', 'Depois de finalizado ele fica salvo no histórico e não pode mais ser alterado.', 'Finalizar e salvar'))) return;
+  const fp = foraDoPadrao(F).length;
+  if (!(await confirmar('Finalizar checklist?', (cl.secoes ? (fp ? `<b class="tag-bad">${fp} resposta(s) fora do padrão</b> (em vermelho ou amarelo). Confira se as observações foram preenchidas.<br><br>` : '<b style="color:var(--ok)">Todas as respostas dentro do padrão.</b><br><br>') : '') + 'Depois de finalizado ele fica salvo no histórico e não pode mais ser alterado.', 'Finalizar e salvar'))) return;
   clearTimeout(salvarTimer);
   const agora = new Date();
   const rec = JSON.parse(JSON.stringify(F));
@@ -1189,7 +1207,7 @@ async function telaReg(id) {
       grupos(sec).forEach((g, gi) => {
         if (g.nome) h += `<tr><th colspan="2">${esc(g.nome)}</th></tr>`;
         g.itens.forEach((a, ii) => { const it = itemObj(a); const key = `${si}-${gi}-${ii}`;
-          h += `<tr><td>${esc(it.n)} ${esc(it.t)}${r.obsItem && r.obsItem[key] ? `<div class="note">Obs.: ${esc(r.obsItem[key])}</div>` : ''}</td><td class="a">${respTexto(r, sec, it, key).map(x => `<div class="${/Não conforme/.test(x) ? 'tag-bad' : ''}">${esc(x)}</div>`).join('')}</td></tr>`; });
+          h += `<tr><td>${esc(it.n)} ${esc(it.t)}${r.obsItem && r.obsItem[key] ? `<div class="note">Obs.: ${esc(r.obsItem[key])}</div>` : ''}</td><td class="a">${respTexto(r, sec, it, key).map((x, ci) => { const k = classeOp(it, r.resp[`${key}-${ci}`]); return `<div class="${k === 'bad' ? 'tag-bad' : k === 'ok' ? 'tag-ok' : k === 'warn' ? 'tag-warn' : ''}">${esc(x)}</div>`; }).join('')}</td></tr>`; });
       });
       h += `</table>${r.obs[si] ? `<p><b>Observações:</b> ${esc(r.obs[si])}</p>` : ''}
         ${sec.verif ? `<p class="note">${sec.verif.map((v, vi) => `Verificador ${v === 'Verificador' ? '' : esc(v)}: <b>${esc(r.verif[`${si}-${vi}`])}</b>`).join(' · ')}</p>` : ''}</div>`;
@@ -1293,6 +1311,15 @@ function gerarPDF(r) {
     styles: {fontSize: 9, cellPadding: 1.8, lineColor: [200, 208, 218]},
     columnStyles: {0: {fontStyle: 'bold', fillColor: [241, 245, 249], cellWidth: 32}, 2: {fontStyle: 'bold', fillColor: [241, 245, 249], cellWidth: 32}}});
   let y = doc.lastAutoTable.finalY + 5;
+  if (cl.secoes) {
+    const fp = foraDoPadrao(r);
+    const txt = fp.length
+      ? `Respostas fora do padrão (${fp.length}): ` + fp.map(x => `${x.grupo ? x.grupo + ' ' : ''}${x.n}${x.col ? ' ' + x.col : ''} = ${x.v}`).join(';  ')
+      : 'Todas as respostas dentro do padrão.';
+    doc.autoTable({startY: y, body: [[{content: pdfTxt(txt), styles: {textColor: fp.length ? [185, 28, 28] : [21, 128, 61], fontStyle: 'bold',
+      fillColor: fp.length ? [254, 242, 242] : [240, 253, 244]}}]], theme: 'grid', margin: {left: M, right: M}, styles: {fontSize: 8.5, cellPadding: 2, lineColor: [205, 212, 222]}});
+    y = doc.lastAutoTable.finalY + 5;
+  }
   const base = {theme: 'grid', margin: {left: M, right: M, top: 14, bottom: 16}, styles: {fontSize: 8.5, cellPadding: 1.6, lineColor: [205, 212, 222], valign: 'middle'},
     headStyles: {fillColor: [22, 64, 110], textColor: 255, fontStyle: 'bold'}};
 
@@ -1323,9 +1350,10 @@ function gerarPDF(r) {
           }
           const ic = colsDe(it, sec);
           const val = ci => { const k = `${key}-${ci}`; const d = r.det && r.det[k]; return (r.resp[k] || '-') + (d ? ' - ' + d : ''); };
+          const corPdf = ci => ({ok: [21, 128, 61], bad: [185, 28, 28], warn: [161, 98, 7]})[classeOp(it, r.resp[`${key}-${ci}`])] || [20, 20, 20];
           let cells;
-          if (ic.length === tc && ic === (sec.cols || [null])) cells = ic.map((_, ci) => pdfTxt(val(ci)));
-          else if (ic.length === tc) cells = ic.map((cn, ci) => pdfTxt((cn ? cn + ': ' : '') + val(ci)));
+          if (ic.length === tc && ic === (sec.cols || [null])) cells = ic.map((_, ci) => ({content: pdfTxt(val(ci)), styles: {textColor: corPdf(ci)}}));
+          else if (ic.length === tc) cells = ic.map((cn, ci) => ({content: pdfTxt((cn ? cn + ': ' : '') + val(ci)), styles: {textColor: corPdf(ci)}}));
           else cells = [{content: pdfTxt(ic.map((cn, ci) => (cn ? cn + ': ' : '') + val(ci)).join('   |   ')), colSpan: tc}];
           body.push([pdfTxt(it.n), pdfTxt(it.t), ...cells]);
         });
@@ -1531,7 +1559,7 @@ function linhasRegistro(r) {
   if (r.obsFinal) L.push([...b, 'Geral', '', 'Obs', 'Observações / Ações tomadas', '', r.obsFinal, '']);
   return L;
 }
-function contarNaoConformes(r) { return Object.values(r.resp || {}).filter(v => v === 'Não conforme').length; }
+function contarNaoConformes(r) { return foraDoPadrao(r).length; }
 function exportarCSV(regs, clId, de, ate) {
   const fil = regs.filter(r => (!clId || r.clId === clId) && (!de || r.campos.data >= de) && (!ate || r.campos.data <= ate))
     .sort((a, b) => a.finalizado.localeCompare(b.finalizado));

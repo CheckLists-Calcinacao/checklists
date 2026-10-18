@@ -16,13 +16,16 @@
      {op:'KK'}   K1 / K2
      {op:'AB'}   Adequado / Baixo
      {opcoes:['A','B']}  lista própria de opções
+     {inv: true}  pergunta em que o NORMAL é "Não" (ex.: "Há vazamento?"):
+                  Não fica verde e Sim fica vermelho. Sem isso, Sim = verde e Não = vermelho.
+                  Nas perguntas Não/Sim + "Qual?" o normal já é "Não".
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.2.0';
+const VERSAO_APP = '2.3.0';
 
 const CONFIG = {
-  equipes: ['A', 'B', 'C', 'D', 'E'],
+  equipes: ['ADM', 'A', 'B', 'C', 'D'],
   turnos: ['07 às 19', '19 às 07'],
   empresa: 'Anglo American',
   local: 'Barro Alto · Calcinação e Pulverização'
@@ -61,30 +64,30 @@ const CHECKLISTS = [
     secoes: [
       { t: '1 - Verificação do ID FAN', cols: K, verif: K, obs: true, itens: [
         ['1.1', 'O nível de óleo do redutor está dentro dos limites?'],
-        ['1.2', 'Há vazamento de óleo/água nos mancais ou unidade hidráulica?'],
-        ['1.3', 'Há ocorrência de ruídos/vibrações no ventilador?']
+        ['1.2', 'Há vazamento de óleo/água nos mancais ou unidade hidráulica?', { inv: true }],
+        ['1.3', 'Há ocorrência de ruídos/vibrações no ventilador?', { inv: true }]
       ]},
       { t: '2 - Verificação dos sistemas de transporte', obs: true, itens: [
-        ['2.1', 'Há vazamentos?']
+        ['2.1', 'Há vazamentos?', { inv: true }]
       ]},
       { t: '3 - Verificação das baias e caçambas de pó', cols: K, obs: true, itens: [
-        ['3.1', 'As baias de pó estão cheias?'],
-        ['3.2', 'As caçambas estão cheias?'],
+        ['3.1', 'As baias de pó estão cheias?', { inv: true }],
+        ['3.2', 'As caçambas estão cheias?', { inv: true }],
         ['3.3', 'As áreas da câmara de fumaça estão isoladas?']
       ]},
       { t: '4 - Verificação do fluxocooler', cols: K, verif: K, obs: true, itens: [
-        ['4.1', 'Há vazamento de pó ou água no fluxocooler?'],
+        ['4.1', 'Há vazamento de pó ou água no fluxocooler?', { inv: true }],
         ['4.2', 'A pressão de trabalho está em 14 kPa?']
       ]},
       { t: '5 - Verificação do chute de alimentação e sistema de resfriamento de gases', cols: K, verif: K, obs: true, itens: [
         ['5.1', 'A região do chute de alimentação se encontra limpa?'],
         ['5.2', 'Os portões de acesso ao chute se encontram fechados?'],
         ['5.3', 'As temperaturas do ciclone estão abaixo de 370 °C?'],
-        ['5.4', 'Os bicos estão entupidos?']
+        ['5.4', 'Os bicos estão entupidos?', { inv: true }]
       ]},
       { t: '6 - Verificação do sistema de lubrificação do selo de alimentação', cols: K, verif: K, obs: true, itens: [
         ['6.1', 'A lubrificação do selo está adequada?', { op: 'SEF' }],
-        ['6.2', 'Há vazamento de ar ou graxa?']
+        ['6.2', 'Há vazamento de ar ou graxa?', { inv: true }]
       ]},
       { t: '7 - Verificação dos mancais', verif: K, obs: true, grupos: [
         { nome: 'Forno K1', itens: [
@@ -105,30 +108,30 @@ const CHECKLISTS = [
       { t: '8 - Verificação no trust roller', cols: K, verif: K, obs: true, itens: [
         ['8.1', 'A posição axial está dentro dos limites? Padrão -5 < x < 5'],
         ['8.2', 'A pressão do óleo está dentro dos limites (50 bar máx)?'],
-        ['8.3', 'Há marcações no rolo de encosto ou anel de rodamento?'],
-        ['8.4', 'Há vazamento de óleo no sistema hidráulico?']
+        ['8.3', 'Há marcações no rolo de encosto ou anel de rodamento?', { inv: true }],
+        ['8.4', 'Há vazamento de óleo no sistema hidráulico?', { inv: true }]
       ]},
       { t: '9 - Verificação dos redutores', cols: K, verif: K, obs: true, itens: [
         ['9.1', 'O nível de óleo dos redutores está dentro dos limites?'],
-        ['9.2', 'Se verifica a ocorrência de ruídos, batidas, etc?'],
+        ['9.2', 'Se verifica a ocorrência de ruídos, batidas, etc?', { inv: true }],
         ['9.3', 'Foi verificado/limpo o filtro da linha de água?'],
         ['9.4', 'A temperatura está dentro dos limites? Padrão 70 °C máx'],
         ['9.5', 'A pressão está entre 1,0 e 5,5 bar?']
       ]},
       { t: '10 - Verificação da região do queimador e ventiladores primário, secundário e terciário', cols: K, verif: K, obs: true, itens: [
-        ['10.1', 'Está ocorrendo retorno de óleo no maçarico?'],
-        ['10.2', 'Há acúmulo de pó no piso do maçarico?'],
-        ['10.3', 'Há vazamento de GLP na região do maçarico?'],
-        ['10.4', 'Se verificou ruído anormal em algum ventilador?'],
+        ['10.1', 'Está ocorrendo retorno de óleo no maçarico?', { inv: true }],
+        ['10.2', 'Há acúmulo de pó no piso do maçarico?', { inv: true }],
+        ['10.3', 'Há vazamento de GLP na região do maçarico?', { inv: true }],
+        ['10.4', 'Se verificou ruído anormal em algum ventilador?', { inv: true }],
         ['10.5', 'As grelhas e selos da saída do forno estão normais?'],
-        ['10.6', 'Há pontos quentes na carcaça do forno?'],
-        ['10.7', 'Há tambores de óleo para serem retirados?', { cols: ['Skid', 'Área do queimador'] }],
+        ['10.6', 'Há pontos quentes na carcaça do forno?', { inv: true }],
+        ['10.7', 'Há tambores de óleo para serem retirados?', { cols: ['Skid', 'Área do queimador'], inv: true }],
         ['10.8', 'A sala dos pfisters se encontra limpa?']
       ]},
       { t: '11 - Verificação da área de amostragem', cols: K, verif: K, obs: true, itens: [
         ['11.1', 'Os portões de acesso se encontram fechados?'],
         ['11.2', 'A proteção das agulhas se encontra no local e em bom estado?'],
-        ['11.3', 'Os tubos de amostragem estão obstruídos?']
+        ['11.3', 'Os tubos de amostragem estão obstruídos?', { inv: true }]
       ]},
       { t: '12 - Verificação da baia de anel', verif: ['Verificador'], obs: true, itens: [
         ['12.1', 'Os portões de acesso às baias estão fechados?'],
@@ -138,27 +141,27 @@ const CHECKLISTS = [
         { nome: 'Área 410', itens: [
           ['13.1', 'O kit de contenção de óleo se encontra no local?'],
           ['13.2', 'A FISPQ do prodol e do óleo 1A se encontram no local?'],
-          ['13.3', 'Há tambores de óleo para serem retirados?'],
+          ['13.3', 'Há tambores de óleo para serem retirados?', { inv: true }],
           ['13.4', 'Foi realizada a limpeza dos filtros?'],
-          ['13.5', 'Há vazamento de óleo na área das bombas e/ou no 410-TQ-001?'],
-          ['13.6', 'Há vazamento de óleo na área dos aquecedores?'],
+          ['13.5', 'Há vazamento de óleo na área das bombas e/ou no 410-TQ-001?', { inv: true }],
+          ['13.6', 'Há vazamento de óleo na área dos aquecedores?', { inv: true }],
           ['13.7', 'Qual o circuito de operação?', { op: 'KK', cols: ['Bomba', 'Aquecedor'] }]
         ]},
         { nome: 'Área 711', itens: [
           ['13.8', 'O kit de contenção de óleo se encontra no local?'],
-          ['13.9', 'Há vazamento de óleo no local?'],
-          ['13.10', 'Há tambores de óleo para serem retirados?'],
+          ['13.9', 'Há vazamento de óleo no local?', { inv: true }],
+          ['13.10', 'Há tambores de óleo para serem retirados?', { inv: true }],
           ['13.11', 'A temperatura de óleo na bomba está OK? Padrão < 65 °C']
         ]}
       ]},
       { t: '14 - Verificações dos compressores', verif: ['Verificador'], obs: true, itens: [
         ['14.1', 'Todos os compressores estão ligados e em rede?'],
-        ['14.2', 'Há alarme nos painéis dos compressores?'],
+        ['14.2', 'Há alarme nos painéis dos compressores?', { inv: true }],
         ['14.3', 'Combustível do compressor diesel', { op: 'AB' }],
         ['14.4', 'O compressor diesel está ligado em modo automático?'],
         ['14.5', 'O teste de funcionamento do compressor diesel foi positivo?'],
         ['14.6', 'Os compressores estão drenando água?'],
-        ['14.7', 'Há vazamentos de ar e/ou óleo?']
+        ['14.7', 'Há vazamentos de ar e/ou óleo?', { inv: true }]
       ]}
     ]
   },
@@ -179,22 +182,22 @@ const CHECKLISTS = [
         ['1.2', 'Ar da central de compressores está alinhado?'],
         ['1.3', 'Compressor da planta está operando normalmente?'],
         ['1.4', 'Purgadores do compressor e do balão de ar estão funcionando normalmente?'],
-        ['1.5', 'Há algum vazamento de ar de instrumento na planta?'],
+        ['1.5', 'Há algum vazamento de ar de instrumento na planta?', { inv: true }],
         ['1.6', 'Pressão do Nitrogênio está normal? (ideal 7 a 8 kgf na rede e 11 a 13 kgf no balão N2)'],
-        ['1.7', 'Há algum vazamento de N2 na planta de pulverização?'],
+        ['1.7', 'Há algum vazamento de N2 na planta de pulverização?', { inv: true }],
         ['1.8', 'Água de refrigeração dos equipamentos está normal?'],
-        ['1.9', 'Há vazamento de água de refrigeração?']
+        ['1.9', 'Há vazamento de água de refrigeração?', { inv: true }]
       ]},
       { t: '2 - Verificação do Moinho 771-MO-001', obs: true, itens: [
         ['2.1', 'Nível de óleo do redutor e unidade 771-UH-002 está acima do nível mínimo?'],
-        ['2.2', 'Há vazamento de óleo no redutor ou unidade hidráulica?'],
+        ['2.2', 'Há vazamento de óleo no redutor ou unidade hidráulica?', { inv: true }],
         ['2.3', 'Temperatura e pressão de água no trocador de calor está normal?'],
-        ['2.4', 'Há ocorrência de ruídos/vibrações no moinho, pêndulas, redutor e motor?'],
+        ['2.4', 'Há ocorrência de ruídos/vibrações no moinho, pêndulas, redutor e motor?', { inv: true }],
         ['2.5', 'Pressão óleo das pêndulas está normal? (ideal entre 60 e 75 bar)'],
         ['2.6', 'Nível óleo na unidade 771-UH-001 está acima do nível mínimo?'],
-        ['2.7', 'Há vazamento de óleo na unidade hidráulica ou conexões das pêndulas?'],
+        ['2.7', 'Há vazamento de óleo na unidade hidráulica ou conexões das pêndulas?', { inv: true }],
         ['2.8', 'Nível de óleo na unidade 771-UH-003 do Classificador está acima do nível mínimo?'],
-        ['2.9', 'Há ruídos, vibrações e vazamentos de óleo no redutor e motor do Classificador?'],
+        ['2.9', 'Há ruídos, vibrações e vazamentos de óleo no redutor e motor do Classificador?', { inv: true }],
         ['2.10', 'Ventilador ar selagem para mesa do moinho, pêndulas e classificador está normal?'],
         ['2.11', 'Caixa de rejeito do moinho está limpa?'],
         ['2.12', 'Vedação da caixa de rejeito e porta de visitas do moinho está normal?'],
@@ -202,26 +205,26 @@ const CHECKLISTS = [
         ['2.14', 'As caçambas de recolhimento de carvão estão vazias?']
       ]},
       { t: '3 - Verificação do Ventilador 771-VE-004', obs: true, itens: [
-        ['3.1', 'Há ocorrência de ruído ou vibração anormal no ventilador?'],
+        ['3.1', 'Há ocorrência de ruído ou vibração anormal no ventilador?', { inv: true }],
         ['3.2', 'Temperatura e vibração dos mancais do ventilador estão normais?'],
         ['3.3', 'Juntas de entrada e saída do ventilador estão normais?'],
-        ['3.4', 'Há entrada de ar ou vazamentos nas tubulações ou no ventilador?']
+        ['3.4', 'Há entrada de ar ou vazamentos nas tubulações ou no ventilador?', { inv: true }]
       ]},
       { t: '4 - Verificação Transportes Pneumáticos e Compressores 771-CB-001 A, 771-CB-001 B e 771-CB-001 R', obs: true, itens: [
-        ['4.1', 'Há ocorrência de ruído ou vibração anormal nos compressores?'],
+        ['4.1', 'Há ocorrência de ruído ou vibração anormal nos compressores?', { inv: true }],
         ['4.2', 'Nível óleo nos reservatórios dos compressores está normal? (ideal metade régua)'],
-        ['4.3', 'Há algum vazamento de óleo/água nos compressores ou unidades hidráulicas?'],
+        ['4.3', 'Há algum vazamento de óleo/água nos compressores ou unidades hidráulicas?', { inv: true }],
         ['4.4', 'Qual compressor está alinhado para transporte Prepcarga?', { opcoes: ['771-CB-001 A', '771-CB-001 R'] }],
         ['4.5', 'Qual compressor está alinhado para transporte Calcinação?', { opcoes: ['771-CB-001 B', '771-CB-001 R'] }],
         ['4.6', 'Porta da sala dos compressores está fechada?'],
         ['4.7', 'Pressão ar de selagem e transporte estão normais?'],
-        ['4.8', 'Há algum vazamento de carvão nos transportes pneumáticos?'],
+        ['4.8', 'Há algum vazamento de carvão nos transportes pneumáticos?', { inv: true }],
         ['4.9', 'As moegas estão ficando pressurizadas (> 0 bar)?'],
-        ['4.10', 'Há a necessidade de drenagem de óleo dos compressores?']
+        ['4.10', 'Há a necessidade de drenagem de óleo dos compressores?', { inv: true }]
       ]},
       { t: '5 - Verificação do Gerador de gases quentes 771-GS-001', obs: true, itens: [
         ['5.1', 'Caçamba de cinzas está vazia?'],
-        ['5.2', 'Há vazamento de GLP?'],
+        ['5.2', 'Há vazamento de GLP?', { inv: true }],
         ['5.3', 'Pressão do ar do ignitor está normal?'],
         ['5.4', 'Ar de refrigeração dos instrumentos está aberto com as devidas pressões ajustadas?'],
         ['5.5', 'Posição das válvulas manuais ventilador combustão estão 100% Radial e 100% Axial?'],
@@ -235,7 +238,7 @@ const CHECKLISTS = [
       { t: '6 - Verificação da Peneira 771-PE-001 e Amostrador 771-AM-001', obs: true, itens: [
         ['6.1', 'Caçamba de descarte da peneira está vazia?'],
         ['6.2', 'A peneira está em operação normal?'],
-        ['6.3', 'Há algum vazamento na peneira?'],
+        ['6.3', 'Há algum vazamento na peneira?', { inv: true }],
         ['6.4', 'O amostrador foi drenado?'],
         ['6.5', 'As amostras foram coletadas e enviadas ao laboratório?']
       ]},
@@ -243,8 +246,8 @@ const CHECKLISTS = [
         ['7.1', 'O silo de carvão moído está cheio? (ideal 100 a 150 t)'],
         ['7.2', 'As temperaturas e gases dentro do silo estão normais? (ideal < 95 °C e CO < 600 ppm)'],
         ['7.3', 'Sistema de inertização e fluidização estão normais?'],
-        ['7.4', 'Há algum vazamento de carvão no descarregamento do silo?'],
-        ['7.5', 'Há algum carvão acumulado sobre o silo? (risco de incêndio)'],
+        ['7.4', 'Há algum vazamento de carvão no descarregamento do silo?', { inv: true }],
+        ['7.5', 'Há algum carvão acumulado sobre o silo? (risco de incêndio)', { inv: true }],
         ['7.6', 'O filtro de mangas 771-FL-002 opera normalmente?']
       ]},
       { t: '8 - Verificação dos silos de carvão britado 771-SL-001 e 771-SL-002', obs: true, itens: [
@@ -252,7 +255,7 @@ const CHECKLISTS = [
         ['8.2', 'As temperaturas dentro dos silos estão normais? (ideal < 80 °C)'],
         ['8.3', 'Chute de alimentação dos silos está limpo?'],
         ['8.4', 'Correia 771-TC-007 está em operação normal?'],
-        ['8.5', 'Há algum rolete danificado na correia 771-TC-007?'],
+        ['8.5', 'Há algum rolete danificado na correia 771-TC-007?', { inv: true }],
         ['8.6', 'O batedor da correia está em funcionamento?'],
         ['8.7', 'O chute do retorno está desobstruído?'],
         ['8.8', 'O transportador 771-TA-001 opera normalmente?'],
@@ -261,10 +264,10 @@ const CHECKLISTS = [
       { t: '9 - Verificação do filtro de mangas 771-FL-001', obs: true, itens: [
         ['9.1', 'O aquecedor de N2 771-AQ-006 do filtro opera normalmente?'],
         ['9.2', 'O sistema de batimento para limpeza das mangas está funcionando normalmente?'],
-        ['9.3', 'Há algum vazamento de N2 ou carvão?'],
-        ['9.4', 'Alguma solenoide do sistema de limpeza está travada aberta?'],
+        ['9.3', 'Há algum vazamento de N2 ou carvão?', { inv: true }],
+        ['9.4', 'Alguma solenoide do sistema de limpeza está travada aberta?', { inv: true }],
         ['9.5', 'A pressão do N2 de limpeza está OK? (6,5 kgf)'],
-        ['9.6', 'Há alguma emissão visível pela chaminé?'],
+        ['9.6', 'Há alguma emissão visível pela chaminé?', { inv: true }],
         ['9.7', 'Roscas transportadoras e válvulas rotativas operam normalmente?'],
         ['9.8', 'A válvula manual de N2 está aberta na posição normal?'],
         ['9.9', 'O analisador de gases O2 e CO na saída do filtro opera normalmente?']
