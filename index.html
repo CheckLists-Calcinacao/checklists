@@ -66,7 +66,7 @@ body.sem-nav .credito{padding-bottom:20px}
 .missing .seg{border-color:var(--miss)}
 .det{grid-column:1/-1}
 .det input,.det textarea{width:100%}
-input[type=text],input[type=date],input[type=number],input:not([type]),textarea,select{border:1.5px solid #B8C4D2;border-radius:10px;padding:11px 12px;background:#fff;min-height:48px;width:100%}
+input[type=text],input[type=password],input[type=date],input[type=number],input:not([type]),textarea,select{border:1.5px solid #B8C4D2;border-radius:10px;padding:11px 12px;background:#fff;min-height:48px;width:100%}
 textarea{min-height:76px;resize:vertical}
 input:focus,textarea:focus,select:focus{outline:3px solid rgba(242,183,5,.5);border-color:var(--navy2)}
 .missing input,.missing textarea,input.missing,textarea.missing{border-color:var(--miss);background:var(--miss-bg)}
@@ -1482,14 +1482,21 @@ async function telaMais() {
     <div class="kv"><b>Nome</b><span>${aparelho() ? esc(aparelho()) : '<span class="tag-bad">Não cadastrado</span>'}</span></div>
     <button class="btn btn-s btn-w" data-cad="1" style="margin-top:12px">${aparelho() ? 'Alterar nome do aparelho' : 'Cadastrar aparelho'}</button></div>
   <div class="card" id="card-sync"><h2>Sincronização (Google Planilha + Drive)</h2>
+    ${cfg.url && !editandoSync ? `
+    <div class="kv"><b>Situação</b><span class="tag-ok"><b>Configurado neste aparelho ✓</b></span>
+      <b>Endereço do App da Web</b><span>•••••••• (oculto)</span><b>Chave de acesso</b><span>•••••••• (oculta)</span></div>
+    <p class="note" id="sy-msg"></p>
+    <button class="btn btn-s btn-w" id="sy-env">Enviar pendentes agora (${pend})</button>
+    <div class="row" style="margin-top:10px"><button class="btn btn-s" id="sy-link">${icCad} Link para configurar outro aparelho</button><button class="btn btn-s" id="sy-alt">${icCad} Alterar configuração</button></div>
+    <button class="btn btn-d btn-w" id="sy-off" style="margin-top:10px">${icCad} Desligar sincronização neste aparelho</button>
+    <p class="note" style="margin-bottom:0">As opções com cadeado pedem o login de gerenciamento.</p>` : `
     <p class="note" style="margin-top:0">Liga este aparelho à planilha e à pasta do Drive compartilhadas por todos os tablets. Cada checklist finalizado é enviado automaticamente.</p>
     <label class="lbl">Endereço do App da Web (termina em /exec)</label><input type="text" id="sy-url" value="${esc(cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec">
     <label class="lbl" style="margin-top:10px">Chave de acesso</label><input type="text" id="sy-chave" value="${esc(cfg.chave || '')}" autocomplete="off" placeholder="Gerada pela função configurar">
     <label class="lbl" style="margin-top:10px">Nome deste aparelho</label><input type="text" id="sy-tab" value="${esc(aparelho())}" placeholder="Ex.: Tablet 1 – Calcinação">
     <button class="btn btn-p btn-w" id="sy-salvar" style="margin-top:12px">Salvar e testar conexão</button>
-    <p class="note" id="sy-msg">${cfg.url ? 'Configurado neste aparelho.' : 'Ainda não configurado.'}</p>
-    ${cfg.url ? `<div class="row"><button class="btn btn-s" id="sy-env">Enviar pendentes agora (${pend})</button><button class="btn btn-s" id="sy-link">Link para configurar outro aparelho</button></div>
-    <button class="btn btn-d btn-w" id="sy-off" style="margin-top:10px">Desligar sincronização neste aparelho</button>` : ''}</div>
+    ${editandoSync ? `<button class="btn btn-s btn-w" id="sy-cancel" style="margin-top:10px">Cancelar</button>` : ''}
+    <p class="note" id="sy-msg">${cfg.url ? 'Editando a configuração (liberado pelo gerenciamento).' : 'Ainda não configurado.'}</p>`}</div>
   <div class="card"><h2>Exportar para Excel</h2><p class="note" style="margin-top:0">Gera uma planilha (CSV) com todas as respostas do período, uma linha por resposta. Abre no Excel e pode ser usada no Power BI.</p>
     <div class="filters"><select id="e-cl"><option value="">Todos os checklists</option>${CHECKLISTS.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>
     <input type="date" id="e-de"><input type="date" id="e-ate"></div>
@@ -1504,21 +1511,24 @@ async function telaMais() {
   <div class="card"><h2>Limpar registros antigos</h2><p class="note" style="margin-top:0">Apaga do tablet os registros com mais de 12 meses. Os PDFs já salvos na pasta Download não são apagados. Faça uma cópia de segurança antes.</p>
     <button class="btn btn-d btn-w" id="bt-limpar">Apagar registros com mais de 12 meses</button></div>`;
   navigator.serviceWorker && navigator.serviceWorker.getRegistration ? navigator.serviceWorker.getRegistration().then(g => { $('#sw-st').textContent = g && g.active ? 'Sim' : 'Não (abra pelo endereço do site)'; }) : ($('#sw-st').textContent = 'Não');
-  $('#sy-salvar').onclick = async () => {
+  if ($('#sy-salvar')) $('#sy-salvar').onclick = async () => {
     const novo = {url: $('#sy-url').value.trim(), chave: $('#sy-chave').value.trim(), tablet: $('#sy-tab').value.trim()};
     if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(novo.url)) return toast('Cole o endereço do App da Web (começa com https://script.google.com/)');
     if (!novo.chave || !novo.tablet) return toast('Preencha a chave e o nome do aparelho');
     $('#sy-msg').textContent = 'Testando conexão…';
-    try { const j = await api('teste', {}, novo); setSyncCfg(novo); setAparelho(novo.tablet); toast('Conectado ✓'); telaMais(); setTimeout(() => sincronizar(true), 500); }
+    try { const j = await api('teste', {}, novo); setSyncCfg(novo); setAparelho(novo.tablet); editandoSync = false; toast('Conectado ✓'); telaMais(); setTimeout(() => sincronizar(true), 500); }
     catch (e) { $('#sy-msg').innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
   };
   if ($('#sy-env')) $('#sy-env').onclick = () => sincronizar(true).then(() => telaMais());
+  if ($('#sy-cancel')) $('#sy-cancel').onclick = () => { editandoSync = false; telaMais(); };
+  if ($('#sy-alt')) $('#sy-alt').onclick = async () => { if (await exigirAdmin('alterar a configuração')) { editandoSync = true; telaMais(); } };
   if ($('#sy-link')) $('#sy-link').onclick = async () => {
+    if (!(await exigirAdmin('gerar o link de configuração'))) return;
     const link = linkConfig(cfg);
     if (navigator.share) { try { await navigator.share({title: 'Configurar Checklists', text: 'Abra este link no aparelho para ligá-lo à nuvem dos Checklists: ' + link}); return; } catch (e) { if (e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(link); toast('Link copiado'); } catch { modal(`<h3>Link de configuração</h3><p style="word-break:break-all">${esc(link)}</p><button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`); }
   };
-  if ($('#sy-off')) $('#sy-off').onclick = async () => { if (await confirmar('Desligar a sincronização?', 'Os registros continuam neste aparelho, mas não serão mais enviados.', 'Desligar', true)) { try { localStorage.removeItem('sync-config'); } catch {} escopoHist = 'local'; telaMais(); } };
+  if ($('#sy-off')) $('#sy-off').onclick = async () => { if (!(await exigirAdmin('desligar a sincronização'))) return; if (await confirmar('Desligar a sincronização?', 'Os registros continuam neste aparelho, mas não serão mais enviados.', 'Desligar', true)) { try { localStorage.removeItem('sync-config'); } catch {} escopoHist = 'local'; telaMais(); } };
   $('#bt-csv').onclick = () => exportarCSV(regs, $('#e-cl').value, $('#e-de').value, $('#e-ate').value);
   $('#bt-bkp').onclick = async () => {
     const blob = new Blob([JSON.stringify({app: 'checklists-barro-alto', versao: VERSAO_APP, gerado: new Date().toISOString(), registros: await DB.all('registros')})], {type: 'application/json'});
@@ -1687,6 +1697,10 @@ async function telaSetup(enc) {
   topo('Configurar sincronização');
   let cfg = null; try { const b = enc.replace(/-/g, '+').replace(/_/g, '/'); cfg = JSON.parse(decodeURIComponent(escape(atob(b + '='.repeat((4 - b.length % 4) % 4))))); } catch {}
   if (!cfg || !cfg.url) { $('#app').innerHTML = '<div class="card">Link de configuração inválido.</div>'; return; }
+  if (syncCfg()) {
+    $('#app').innerHTML = '<div class="card"><h2>Este aparelho já está configurado</h2><p class="note">Para trocar a configuração, é preciso o login de gerenciamento.</p></div>';
+    if (!(await exigirAdmin('trocar a configuração deste aparelho'))) { location.hash = '#/'; return; }
+  }
   $('#app').innerHTML = `<div class="card"><h2>Ligar este aparelho à nuvem</h2>
     <p class="note">Este link liga o aparelho à mesma planilha e pasta do Drive dos outros tablets. Dê um nome para identificar este aparelho.</p>
     <label class="lbl">Nome deste aparelho</label><input type="text" id="st-nome" placeholder="Ex.: Tablet 2 – Calcinação ou Gerência – celular" value="${esc(aparelho())}">
@@ -1700,6 +1714,28 @@ async function telaSetup(enc) {
 }
 
 /* ================= gerenciamento de dispositivos (com login) ================= */
+let editandoSync = false;
+const icCad = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+/* pede o login de gerenciamento TODA vez (conferido no servidor do Google). Resolve true se liberado.
+   Não deixa sessão aberta no aparelho: cada ação protegida pede o login de novo. */
+async function exigirAdmin(motivo) {
+  return new Promise(res => {
+    const ov = modal(`<h3>${icCad} Acesso restrito</h3><p>Para ${esc(motivo)}, entre com o login de gerenciamento.</p>
+      <label class="lbl">Usuário</label><input type="text" id="ex-u" autocomplete="username" autocapitalize="off">
+      <label class="lbl" style="margin-top:10px">Senha</label><input type="password" id="ex-s" autocomplete="current-password">
+      <p class="note" id="ex-msg" style="margin:10px 0 0"></p>
+      <div class="row" style="margin-top:12px"><button class="btn btn-s" data-r="0">Cancelar</button><button class="btn btn-p" data-r="1">Entrar</button></div>`);
+    const fechar = v => { ov.remove(); res(v); };
+    const entrar = async () => {
+      $('#ex-msg', ov).textContent = 'Conferindo…';
+      try { await api('admLogin', {usuario: $('#ex-u', ov).value.trim(), senha: $('#ex-s', ov).value}); fechar(true); }
+      catch (e) { $('#ex-msg', ov).innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+    };
+    ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return; if (b.dataset.r === '1') entrar(); else fechar(false); });
+    $('#ex-s', ov).onkeydown = e => { if (e.key === 'Enter') entrar(); };
+    setTimeout(() => $('#ex-u', ov).focus(), 60);
+  });
+}
 function admToken() { try { return sessionStorage.getItem('adm-token') || ''; } catch { return ''; } }
 function setAdmToken(t) { try { t ? sessionStorage.setItem('adm-token', t) : sessionStorage.removeItem('adm-token'); } catch {} }
 async function admApi(acao, dados = {}) {

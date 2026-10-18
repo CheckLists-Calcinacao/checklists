@@ -2,7 +2,7 @@
    - Páginas e scripts: tenta a internet primeiro (para pegar atualizações);
      se não tiver rede em 4 s, usa a cópia guardada.
    - Ícones e fotos do croqui: usa a cópia guardada direto. */
-const CACHE = 'checklists-v10';
+const CACHE = 'checklists-v11';
 const ARQUIVOS = [
   './', 'index.html', 'checklists.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'croqui-fotos.js'
