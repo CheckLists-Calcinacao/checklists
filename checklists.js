@@ -22,7 +22,7 @@
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.4.1';
+const VERSAO_APP = '2.5.0';
 
 const CONFIG = {
   equipes: ['ADM', 'A', 'B', 'C', 'D'],
@@ -344,8 +344,10 @@ const CHECKLISTS = [
     sigla: 'GRA',
     cor: '#0F766E',
     tipo: 'calculo',
-    campos: ['material', 'data', 'turno', 'equipe'],
+    campos: ['material', 'origem', 'data', 'turno', 'equipe'],
     materiais: ['Minério', 'Carvão'],
+    // origem do minério: só aparece quando o material for Minério
+    origens: ['K1 Principal', 'K1 Emergência', 'K1 Parado', 'K2 Principal', 'K2 Emergência', 'K2 Parado'],
     assinatura: false
   }
 ];

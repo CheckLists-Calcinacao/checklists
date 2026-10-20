@@ -612,6 +612,8 @@ const dataBR = iso => iso ? iso.slice(0,10).split('-').reverse().join('/') : '';
 const horaBR = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const dtBR = iso => { const d = new Date(iso); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const CL = id => CHECKLISTS.find(c => c.id === id);
+/* material da granulometria com a origem do minério (ex.: "Minério – K1 Principal") */
+const materialTxt = c => c && c.material ? c.material + (c.material === 'Minério' && c.origem ? ' – ' + c.origem : '') : '';
 const LOGO = 'data:image/png;base64,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';
 /* checklist como estava quando o registro foi salvo (perguntas guardadas no próprio registro) */
 const CLR = r => { const c = CL(r.clId); if (!c) return null; return r.secoes ? {...c, secoes: r.secoes} : c; };
@@ -868,6 +870,7 @@ function campoHTML(cl, c) {
   if (c === 'equipe') return `<div class="field" data-f="equipe"><label class="lbl">Equipe</label>${seg(CONFIG.equipes)}</div>`;
   if (c === 'tag') return `<div class="field" data-f="tag"><label class="lbl">Tag do calcinador</label>${seg(cl.tags)}</div>`;
   if (c === 'material') return `<div class="field" data-f="material"><label class="lbl">Material</label>${seg(cl.materiais)}</div>`;
+  if (c === 'origem') return `<div class="field" data-f="origem" style="grid-column:1/-1" ${F.campos.material === 'Minério' ? '' : 'hidden'}><label class="lbl">Origem do minério</label>${seg(cl.origens)}</div>`;
   return '';
 }
 
@@ -910,7 +913,13 @@ function calcHTML() {
       <div class="big"><div class="k">% Passante 16</div><div class="v" id="p16">—</div></div></div>
     <p class="note" id="calc-aviso" style="color:var(--bad);margin:10px 0 0"></p>
     <label class="lbl" style="margin-top:14px">Identificação da amostra / observações</label>
-    <input type="text" data-calc="amostra" value="${esc(c.amostra)}" placeholder="Opcional"></div>`;
+    <input type="text" data-calc="amostra" value="${esc(c.amostra)}" placeholder="Opcional"></div>
+  <div class="card" id="fotos-gran"><div class="sec-h"><h2>Fotos da granulometria</h2><span class="cnt" id="cnt-fg">${(F.fotos.gran || []).length} foto(s)</span></div>
+    <p class="note" style="margin-top:4px">Opcional. Tire quantas fotos precisar (até ${MAX_FOTOS_GRAN}); elas vão para o PDF com data e hora.</p>
+    <div class="thumbs" id="th-gran">${thumbsGran()}</div>
+    <div class="row" style="margin-top:12px"><button type="button" class="btn btn-p" data-cam="cam-gran">${icCam} Tirar foto</button><button type="button" class="btn btn-s" data-cam="gal-gran">Galeria</button></div>
+    <input type="file" accept="image/*" capture="environment" id="in-cam-gran" data-fotog="1" hidden>
+    <input type="file" accept="image/*" multiple id="in-gal-gran" data-fotog="1" hidden></div>`;
 }
 function calcValores(c) {
   const t = num(c.total), a = num(c.r25), b = num(c.r16);
@@ -945,17 +954,25 @@ function ligarEventosForm(cl) {
     } else if (b.dataset.campo) {
       F.campos[b.dataset.campo] = b.dataset.v;
       $$(`button[data-campo="${b.dataset.campo}"]`).forEach(x => x.classList.toggle('on', x.dataset.v === b.dataset.v));
+      if (b.dataset.campo === 'material' && $('[data-f="origem"]')) {
+        const min = b.dataset.v === 'Minério'; $('[data-f="origem"]').hidden = !min;
+        if (!min) { delete F.campos.origem; $$('button[data-campo="origem"]').forEach(x => x.classList.remove('on')); }
+      }
       b.closest('.field').classList.remove('missing'); progresso(cl); salvarRascunho();
     } else if (b.dataset.croq !== undefined) {
       abrirCroqui(b.dataset.croq ? b.dataset.croq.split(',').map(Number) : null);
     } else if (b.dataset.cam) {
       $(`#in-${b.dataset.cam}`).click();
+    } else if (b.dataset.verg !== undefined) {
+      verFotoGran(Number(b.dataset.verg));
     } else if (b.dataset.ver) {
       verFoto(cl, b.dataset.ver);
     } else if (b.id === 'bt-fin') finalizar(cl);
   };
   app.onchange = e => {
-    const t = e.target; if (!t.dataset.foto || !t.files.length) return;
+    const t = e.target; if (!t.files || !t.files.length) return;
+    if (t.dataset.fotog) { adicionarFotosGran([...t.files]); t.value = ''; return; }
+    if (!t.dataset.foto) return;
     adicionarFotos(cl, Number(t.dataset.foto), [...t.files]); t.value = '';
   };
   app.oninput = e => {
@@ -977,7 +994,7 @@ function ligarEventosForm(cl) {
 /* lista do que falta preencher */
 function pendencias(cl) {
   const p = [];
-  cl.campos.forEach(c => { if (!F.campos[c]) p.push({sel: `[data-f="${c}"]`, cls: 'missing', txt: 'Identificação'}); });
+  cl.campos.forEach(c => { if (c === 'origem' && F.campos.material !== 'Minério') return; if (!F.campos[c]) p.push({sel: `[data-f="${c}"]`, cls: 'missing', txt: c === 'origem' ? 'Origem do minério' : 'Identificação'}); });
   if (cl.tipo === 'calculo') {
     const r = calcValores(F.calc);
     if (!(r.t > 0)) p.push({sel: '[data-f="calc-total"]', txt: 'Peso total'});
@@ -1086,6 +1103,43 @@ async function abrirCroqui(filtro) {
     $('[data-x]', z).onclick = () => z.remove(); };
 }
 
+/* ================= fotos da granulometria ================= */
+const MAX_FOTOS_GRAN = 30;
+function thumbsGran() { return ((F && F.fotos && F.fotos.gran) || []).map((f, i) => `<button type="button" class="thumb" data-verg="${i}"><img src="${f.d}" alt="Foto ${i + 1}"></button>`).join(''); }
+function atualizarFotosGran() { const t = $('#th-gran'); if (t) t.innerHTML = thumbsGran(); const c = $('#cnt-fg'); if (c) c.textContent = `${(F.fotos.gran || []).length} foto(s)`; }
+async function adicionarFotosGran(files) {
+  const l = F.fotos.gran = F.fotos.gran || [];
+  for (const f of files) {
+    if (l.length >= MAX_FOTOS_GRAN) { toast(`Máximo de ${MAX_FOTOS_GRAN} fotos`); break; }
+    try { l.push(await processarFoto(f, 0, 'Granulometria')); } catch (e) { toast('Não foi possível usar essa imagem'); }
+  }
+  atualizarFotosGran(); salvarRascunho();
+}
+function verFotoGran(i) {
+  const f = (F.fotos.gran || [])[i]; if (!f) return;
+  const ov = modal(`<img src="${f.d}" style="width:100%;border-radius:10px;display:block">
+    <p class="note" style="margin:10px 0">Foto ${i + 1} · ${dtBR(f.t)}</p>
+    <div class="row"><button class="btn btn-d" data-r="del">Remover foto</button><button class="btn btn-p" data-r="ok">Fechar</button></div>`, {wide: true});
+  ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return;
+    if (b.dataset.r === 'del') { F.fotos.gran.splice(i, 1); atualizarFotosGran(); salvarRascunho(); }
+    ov.remove(); });
+}
+/* fotos no PDF: 2 por linha, com quebra de página */
+function pdfFotosLista(doc, fotos, y, base, titulo) {
+  const H = doc.internal.pageSize.getHeight(), W = 210, M = 12, gap = 6, cw = (W - 2 * M - gap) / 2, maxH = 85, fim = H - 18;
+  const dims = fotos.map(f => { let w = cw, h = cw * (f.h / f.w); if (h > maxH) { w = w * maxH / h; h = maxH; } return [w, h]; });
+  if (y + 12 + dims[0][1] > fim) { doc.addPage(); y = 14; }
+  doc.autoTable({...base, startY: y, head: [[{content: pdfTxt(titulo + ` (${fotos.length})`), styles: {fillColor: [11, 42, 74], fontSize: 9.5}}]], body: []});
+  y = doc.lastAutoTable.finalY + 3;
+  for (let i = 0; i < fotos.length; i += 2) {
+    const lh = Math.max(dims[i][1], dims[i + 1] ? dims[i + 1][1] : 0);
+    if (y + lh > fim) { doc.addPage(); y = 14; }
+    [i, i + 1].forEach((k, col) => { if (!fotos[k]) return; try { doc.addImage(fotos[k].d, 'JPEG', M + col * (cw + gap), y, dims[k][0], dims[k][1]); } catch (e) {} });
+    y += lh + 4;
+  }
+  return y;
+}
+
 /* (função antiga de fotos tiradas na hora – só é usada se um checklist tiver "croqui" com captura) */
 function croquiHTML(cl) {
   return `<section class="card" id="sec-croqui"><div class="sec-h"><h2>Croqui de válvulas – fotos da partida</h2><span class="cnt" id="cnt-croqui"></span></div>
@@ -1105,7 +1159,7 @@ function thumbsHTML(n) {
 function redesenhaThumbs(cl, n) { $('#th-' + n).innerHTML = thumbsHTML(n); $('#cq-' + n).classList.remove('missing'); progresso(cl); }
 
 /* reduz a foto, carimba data/hora e devolve JPEG */
-function processarFoto(file, n) {
+function processarFoto(file, n, rotulo) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file); const im = new Image();
     im.onload = () => {
@@ -1114,7 +1168,7 @@ function processarFoto(file, n) {
       const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const x = cv.getContext('2d');
       x.drawImage(im, 0, 0, w, h);
       const agora = new Date().toISOString(); const fs = Math.max(16, Math.round(w / 40));
-      const txt = `Ponto ${n} · ${dtBR(agora)}`;
+      const txt = `${rotulo || 'Ponto ' + n} · ${dtBR(agora)}`;
       x.font = `600 ${fs}px sans-serif`; const tw = x.measureText(txt).width;
       x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, h - fs * 1.8, tw + fs * 1.2, fs * 1.8);
       x.fillStyle = '#fff'; x.fillText(txt, fs * .6, h - fs * .55);
@@ -1178,7 +1232,7 @@ async function telaHist() {
     $('#h-cnt').textContent = `${fil.length} registro(s)`;
     $('#h-lista').innerHTML = fil.length ? fil.slice(0, filtroHist.lim).map(r => { const cl = CL(r.clId) || {cor: '#888'};
       return `<a class="reg" style="--c:${cl.cor}" href="#/reg/${encodeURIComponent(r.id)}"><div>
-        <div class="t">${esc(r.nome)}${r.campos.tag ? ' · ' + esc(r.campos.tag) : ''}${r.campos.material ? ' · ' + esc(r.campos.material) : ''}</div>
+        <div class="t">${esc(r.nome)}${r.campos.tag ? ' · ' + esc(r.campos.tag) : ''}${r.campos.material ? ' · ' + esc(materialTxt(r.campos)) : ''}</div>
         <div class="m">${dataBR(r.campos.data)} · ${esc(r.campos.turno)} · Equipe ${esc(r.campos.equipe)} · ${esc(r.responsavel)}${r.tablet ? ' · ' + esc(r.tablet) : ''}</div>${badgeSync(r)}</div>
         <div class="id">${esc(r.id)}<br>salvo ${dtBR(r.finalizado)}</div></a>`; }).join('')
       + (fil.length > filtroHist.lim ? `<button class="btn btn-s btn-w" id="h-mais">Mostrar mais</button>` : '')
@@ -1196,13 +1250,14 @@ async function telaReg(id) {
   topo(r.nome, r.id, '', true);
   let h = `<div class="card"><div class="kv">
     <b>Data</b><span>${dataBR(r.campos.data)}</span><b>Horário</b><span>${esc(r.campos.turno)}</span><b>Equipe</b><span>${esc(r.campos.equipe)}</span>
-    ${r.campos.tag ? `<b>Tag</b><span>${esc(r.campos.tag)}</span>` : ''}${r.campos.material ? `<b>Material</b><span>${esc(r.campos.material)}</span>` : ''}
+    ${r.campos.tag ? `<b>Tag</b><span>${esc(r.campos.tag)}</span>` : ''}${r.campos.material ? `<b>Material</b><span>${esc(materialTxt(r.campos))}</span>` : ''}
     <b>Responsável</b><span>${esc(r.responsavel)}</span><b>Salvo em</b><span>${dtBR(r.finalizado)}</span></div>
     ${painelPDF()}</div>`;
   if (cl && cl.tipo === 'calculo') {
     h += `<div class="card"><table class="ro"><tr><td>Peso total</td><td class="a">${esc(r.calc.total)} kg</td></tr><tr><td>Peso retido 25</td><td class="a">${esc(r.calc.r25)} kg</td></tr>
       <tr><td>Peso retido 16</td><td class="a">${esc(r.calc.r16 || '—')}${r.calc.r16 ? ' kg' : ''}</td></tr><tr><td>% Passante 25</td><td class="a">${fmtPct(r.calc.p25)}</td></tr>
       <tr><td>% Passante 16</td><td class="a">${fmtPct(r.calc.p16)}</td></tr>${r.calc.amostra ? `<tr><td>Amostra / obs.</td><td>${esc(r.calc.amostra)}</td></tr>` : ''}</table></div>`;
+    if (r.fotos && r.fotos.gran && r.fotos.gran.length) h += `<div class="card"><h2>Fotos da granulometria</h2><div class="thumbs">${r.fotos.gran.map(f => `<a href="${f.d}" target="_blank" class="thumb"><img src="${f.d}"></a>`).join('')}</div></div>`;
   } else if (cl) {
     cl.secoes.forEach((sec, si) => {
       h += `<div class="card"><h2>${esc(sec.t)}</h2><table class="ro">`;
@@ -1285,7 +1340,7 @@ function respTexto(r, sec, it, key) {
 /* ================= PDF ================= */
 function nomeArquivo(r) {
   const cl = CL(r.clId); const c = r.campos; const d = new Date(r.finalizado);
-  const extra = c.tag ? '_' + c.tag : c.material ? '_' + c.material.normalize('NFD').replace(/[̀-ͯ]/g, '') : '';
+  const extra = c.tag ? '_' + c.tag : c.material ? '_' + materialTxt(c).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s*–\s*/g, '_').replace(/\s+/g, '-') : '';
   const turno = (c.turno || '').replace(/\D+/g, '-').replace(/^-|-$/g, '');
   return `${cl ? cl.arquivo : 'Checklist'}${extra}_${c.data}_${turno}_Eq${c.equipe}_${pad(d.getHours())}h${pad(d.getMinutes())}.pdf`;
 }
@@ -1306,7 +1361,7 @@ function gerarPDF(r) {
   const c = r.campos;
   const info = [['Data', dataBR(c.data), 'Horário', c.turno], ['Equipe', c.equipe, 'Responsável', r.responsavel]];
   if (c.tag) info.push(['Tag do calcinador', c.tag, 'Salvo em', dtBR(r.finalizado)]);
-  else if (c.material) info.push(['Material', c.material, 'Salvo em', dtBR(r.finalizado)]);
+  else if (c.material) info.push(['Material', materialTxt(c), 'Salvo em', dtBR(r.finalizado)]);
   else info.push(['Salvo em', dtBR(r.finalizado), 'Tablet', r.tablet || '-']);
   if (c.tag || c.material) info.push(['Tablet', r.tablet || '-', '', '']);
   doc.autoTable({startY: 30, body: info.map(l => l.map(pdfTxt)), theme: 'grid', margin: {left: M, right: M},
@@ -1334,6 +1389,7 @@ function gerarPDF(r) {
       styles: {...base.styles, fontSize: 11, cellPadding: 3}, columnStyles: {1: {halign: 'right', cellWidth: 60}}});
     y = doc.lastAutoTable.finalY + 5;
     if (r.calc.amostra) { doc.autoTable({...base, startY: y, body: [[{content: pdfTxt('Amostra / observações: ' + r.calc.amostra)}]]}); y = doc.lastAutoTable.finalY + 5; }
+    if (r.fotos && r.fotos.gran && r.fotos.gran.length) y = pdfFotosLista(doc, r.fotos.gran, y, base, 'Fotos da granulometria');
   } else {
     cl.secoes.forEach((sec, si) => {
       const partes = cl.id === 'partes';
@@ -1555,11 +1611,11 @@ async function telaMais() {
 /* uma linha por resposta (usada na planilha exportada e na aba Respostas do Google) */
 function linhasRegistro(r) {
   const L = []; const cl = CLR(r); if (!cl) return L; const c = r.campos;
-  const b = [r.id, r.nome, dataBR(c.data), c.turno, c.equipe, c.tag || c.material || '', r.responsavel, dtBR(r.finalizado)];
+  const b = [r.id, r.nome, dataBR(c.data), c.turno, c.equipe, c.tag || materialTxt(c) || '', r.responsavel, dtBR(r.finalizado)];
   if (cl.tipo === 'calculo') {
     [['Peso total (kg)', r.calc.total], ['Peso retido 25 (kg)', r.calc.r25], ['Peso retido 16 (kg)', r.calc.r16],
      ['% Passante 25', isFinite(r.calc.p25) ? String((r.calc.p25 * 100).toFixed(2)).replace('.', ',') : ''], ['% Passante 16', isFinite(r.calc.p16) ? String((r.calc.p16 * 100).toFixed(2)).replace('.', ',') : ''],
-     ['Amostra / obs.', r.calc.amostra]].forEach(([k, v]) => L.push([...b, 'Granulometria', '', '', k, '', v ?? '', '']));
+     ['Amostra / obs.', r.calc.amostra], ['Fotos', ((r.fotos || {}).gran || []).length + ' foto(s)']].forEach(([k, v]) => L.push([...b, 'Granulometria', '', '', k, '', v ?? '', '']));
     return L;
   }
   cl.secoes.forEach((sec, si) => {
@@ -1648,7 +1704,7 @@ async function sincronizar(manual = false) {
       try {
         const p = montarPDF(r);
         const reg = {id: r.id, clId: r.clId, checklist: r.nome, data: r.campos.data, turno: r.campos.turno, equipe: r.campos.equipe,
-          extra: r.campos.tag || r.campos.material || '', responsavel: r.responsavel, finalizado: r.finalizado,
+          extra: r.campos.tag || materialTxt(r.campos) || '', responsavel: r.responsavel, finalizado: r.finalizado,
           tablet: r.tablet || aparelho(), naoConformes: contarNaoConformes(r)};
         const j = await api('salvar', {reg, linhas: linhasRegistro(r), pdf: await blobB64(p.blob), nomePdf: p.nome});
         r.sync = 'ok'; r.fileId = j.fileId; r.enviadoEm = new Date().toISOString(); delete r.syncErro;
