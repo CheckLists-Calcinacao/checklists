@@ -22,7 +22,7 @@
      {cols:['Skid','Área do queimador']}  colunas próprias só nessa pergunta
    ===================================================================== */
 
-const VERSAO_APP = '2.5.0';
+const VERSAO_APP = '2.6.0';
 
 const CONFIG = {
   equipes: ['ADM', 'A', 'B', 'C', 'D'],
@@ -321,7 +321,7 @@ const CHECKLISTS = [
     assinatura: false,
     secoes: (function () {
       const TERMO = ['TERMOPARES', 'Verificar fixação dos termopares'];
-      const ANILHAS = ['ANILHAS E CABOS DE AÇO', 'Inspecionar estado das anilhas (trincas, deformações, corrosão).\nVerificar tensão e fixação dos cabos de aço (folgas, desgaste, corrosão).\nConfirmar se os sistemas de trava estão funcionando corretamente.'];
+      const ANILHAS = ['ANILHAS E CABOS DE AÇO (INSPEÇÃO VISUAL)', 'Foi feita inspeção visual no estado das anilhas (trincas, deformações, corrosão).\nFoi feita inspeção visual na tensão e fixação dos cabos de aço (folgas, desgaste, corrosão).\nFoi feita inspeção visual nos sistemas de trava (funcionamento correto).'];
       const PORTAS = ['PORTAS DE VISITA DOS DUTOS TERCIÁRIOS (08, 09, 10, 11 E 13)', 'Verificar vedação e fixação das portas (parafusos, dobradiças).\nConfirmar ausência de vazamentos.'];
       const CALHAS = ['CALHAS E ELETRODUTOS', 'Verificar fixação e alinhamento das calhas (parafusos, suportes).\nInspecionar estado dos eletrodutos (rachaduras, deformações, corrosão).'];
       const MIGRA = ['MIGRAÇÃO / ANÉIS DE RODAMENTO', 'Inspecionar estado dos blocos de retenção (patas de elefante) (trincas, deformações).\nInspecionar anéis de desgaste (trincas, deformações, alinhamento).\nInspecionar calços do anel de rodamento.'];

@@ -86,6 +86,11 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(242,183,5,.5);bor
 .pdf-box{background:#F4F7FB;border:1px solid #D5DDE6;border-radius:12px;padding:14px;margin-top:16px;text-align:left}
 .pdf-st{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .btn:disabled{opacity:.45}
+.fmt-lin{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--ink2);font-weight:600}
+.seg{display:inline-flex;border:1.5px solid #9DB4CF;border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--navy);font-weight:700;padding:0 20px;min-height:42px;font-size:15px}
+.seg button+button{border-left:1.5px solid #9DB4CF}
+.seg button.on{background:var(--navy);color:#fff}
 .spin{width:16px;height:16px;border:2.5px solid #C5D2E0;border-top-color:var(--navy);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 .sync{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px}
@@ -180,7 +185,7 @@ table.ro td.a{white-space:nowrap;font-weight:600}
 <body>
 <header class="top" id="top"></header>
 <main id="app"></main>
-<div class="credito">Desenvolvido e criado por João Mateus - Processo BA</div>
+<div class="credito">Desenvolvido e criado por João Mateus - Processo BA · <span id="ver-app"></span></div>
 <nav class="nav" id="nav">
   <a href="#/" data-v="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</a>
   <a href="#/hist" data-v="hist"><svg viewBox="0 0 24 24"><path d="M8 3h8l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 11h8M8 15h8M8 7h4"/></svg>Histórico</a>
@@ -777,7 +782,7 @@ async function telaHome() {
     }).join('')}
     ${(() => { const sem = CHECKLISTS.filter(c => !AREAS.some(a => a.id === c.area)); const lk = (typeof LINKS !== 'undefined' ? LINKS : []).filter(l => !AREAS.some(a => a.id === l.area));
       return sem.length || lk.length ? `<div class="area" style="--c:#475569"><i></i><h2>Outros</h2></div><div class="grid">${sem.map(cl => cartaoChecklist(cl, rasc[cl.id], cl.cor)).join('')}${lk.map(l => cartaoLink(l, l.cor)).join('')}</div>` : ''; })()}
-    ${instalarBanner()}`;
+`;
   $('#app').onclick = async e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.cont) location.hash = '#/form/' + b.dataset.cont;
@@ -793,7 +798,6 @@ async function telaHome() {
       if (!(await confirmar('Excluir rascunho?', 'As respostas que ainda não foram finalizadas serão apagadas.', 'Excluir', true))) return;
       await DB.del('rascunhos', b.dataset.del); toast('Rascunho excluído'); telaHome();
     }
-    if (b.id === 'bt-inst') instalar();
   };
 }
 function cartaoChecklist(cl, r, cor) {
@@ -1318,18 +1322,16 @@ async function telaHistNuvem(recarregar = false) {
   desenha();
 }
 async function abrirPDFNuvem(fileId, rid) {
-  const ov = modal(`<h3>PDF do registro ${esc(rid)}</h3><div id="pn-st" class="pdf-st"><span class="spin"></span> Baixando da nuvem…</div>
-    <div class="row" style="margin-top:12px"><button class="btn btn-p" data-a="pdf" disabled>Baixar PDF</button><button class="btn btn-a" data-a="share" disabled>Compartilhar</button></div>
-    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="abrir" disabled>Abrir PDF</button>
-    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="fechar">Fechar</button>`);
   const chave = 'nuvem-' + fileId;
-  ov.addEventListener('click', e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'fechar') ov.remove(); else if (a) acaoPDF({id: chave}, a); });
+  const ov = modal(`<h3>Relatório ${esc(rid)}</h3>${painelPDF()}
+    <button class="btn btn-s btn-w" style="margin-top:10px" data-a="fechar">Fechar</button>`);
+  ov.addEventListener('click', e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'fechar') ov.remove(); else if (a) acaoPDF({id: chave}, a, ov); });
+  atualizarPainel(chave, ov);
+  if (!pdfCache[chave]) $('[data-st]', ov).innerHTML = '<span class="spin"></span> Baixando da nuvem…';
   try {
     if (!pdfCache[chave]) { const j = await api('pdf', {fileId}); pdfCache[chave] = pdfDeBlob(b64Blob(j.pdf, 'application/pdf'), j.nome); }
-    $('#pn-st', ov).innerHTML = `PDF pronto: <b>${esc(pdfCache[chave].nome)}</b>`;
-    $$('[data-a="pdf"],[data-a="share"],[data-a="abrir"]', ov).forEach(b => b.disabled = false);
-    if (!(navigator.canShare && navigator.canShare({files: [pdfCache[chave].file]}))) $('[data-a="share"]', ov).disabled = true;
-  } catch (e) { $('#pn-st', ov).innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
+    atualizarPainel(chave, ov);
+  } catch (e) { $('[data-st]', ov).innerHTML = `<span class="tag-bad">${esc(e.message)}</span>`; }
 }
 
 function respTexto(r, sec, it, key) {
@@ -1483,25 +1485,46 @@ function baixarArquivo(blob, nome) {
    download e compartilhamento quando a ação acontece logo após o toque; se o
    PDF fosse montado na hora (com fotos pode levar alguns segundos), o Chrome
    bloquearia sem avisar. */
-const pdfCache = {};
+const pdfCache = {}; const imgCache = {}; const imgPromessa = {};
+let formatoSaida = (() => { try { return localStorage.getItem('formato-saida') === 'img' ? 'img' : 'pdf'; } catch { return 'pdf'; } })();
 function painelPDF() {
-  return `<div class="pdf-box"><div class="pdf-st" id="pdf-st"><span class="spin"></span> Preparando o PDF…</div>
+  return `<div class="pdf-box" data-pbox>
+    <div class="fmt-lin"><span>Formato do relatório:</span><div class="seg" role="group"><button type="button" data-a="fmt-pdf">PDF</button><button type="button" data-a="fmt-img">Imagem</button></div></div>
+    <div class="pdf-st" data-st><span class="spin"></span> Preparando o PDF…</div>
     <div class="row" style="margin-top:12px"><button class="btn btn-p" data-a="pdf" disabled>Baixar PDF</button>
       <button class="btn btn-a" data-a="share" disabled>Compartilhar</button></div>
     <button class="btn btn-s btn-w" style="margin-top:10px" data-a="abrir" disabled>Abrir PDF</button></div>`;
 }
 function erroPDF(etapa, e) {
-  modal(`<h3>Não foi possível ${etapa}</h3><p>Tente o botão <b>Abrir PDF</b> e, na tela do PDF, use o menu ⋮ → <b>Baixar</b> ou <b>Compartilhar</b>.</p>
+  modal(`<h3>Não foi possível ${etapa}</h3><p>Tente o botão <b>Abrir</b> e, na tela aberta, use o menu ⋮ → <b>Baixar</b> ou <b>Compartilhar</b>.</p>
     <p class="note">Detalhe técnico (envie para quem cuida do app): ${esc((e && (e.name + ': ' + e.message)) || e)}</p>
     <button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`);
 }
-function prepararPDF(r) {
-  const st = () => $('#pdf-st');
-  const pronto = p => { if (!st()) return; st().innerHTML = `PDF pronto: <b>${esc(p.nome)}</b>`; $$('[data-a="pdf"],[data-a="share"],[data-a="abrir"]').forEach(b => b.disabled = false);
-    if (!(navigator.canShare && navigator.canShare({files: [p.file]}))) { const b = $('[data-a="share"]'); b.disabled = true; b.textContent = 'Compartilhar (indisponível)'; } };
-  if (pdfCache[r.id]) return pronto(pdfCache[r.id]);
+/* Atualiza os botões do painel conforme o formato escolhido (PDF ou imagem). */
+function atualizarPainel(chave, raiz = document) {
+  const box = $('[data-pbox]', raiz); if (!box) return;
+  const st = $('[data-st]', box), bts = $$('[data-a="pdf"],[data-a="share"],[data-a="abrir"]', box), img = formatoSaida === 'img';
+  $$('.seg button', box).forEach(b => b.classList.toggle('on', b.dataset.a === 'fmt-' + formatoSaida));
+  $('[data-a="pdf"]', box).textContent = img ? 'Baixar imagem' : 'Baixar PDF';
+  $('[data-a="abrir"]', box).textContent = img ? 'Ver imagem' : 'Abrir PDF';
+  bts.forEach(b => b.disabled = true);
+  const liga = files => { bts.forEach(b => b.disabled = false); const sh = $('[data-a="share"]', box);
+    const ok = !!(navigator.canShare && navigator.canShare({files})); sh.disabled = !ok; sh.textContent = ok ? 'Compartilhar' : 'Compartilhar (indisponível)'; };
+  const p = pdfCache[chave];
+  if (!p) { st.innerHTML = '<span class="spin"></span> Preparando o PDF…'; return; }
+  if (!img) { st.innerHTML = `PDF pronto: <b>${esc(p.nome)}</b>`; return liga([p.file]); }
+  const im = imgCache[chave];
+  if (im) { st.innerHTML = `Imagem pronta: <b>${im.files.length} página(s) em JPG</b>`; return liga(im.files); }
+  st.innerHTML = '<span class="spin"></span> Preparando a imagem…';
+  gerarImagens(chave).then(() => { if (box.isConnected) atualizarPainel(chave, raiz); })
+    .catch(e => { if (box.isConnected) st.innerHTML = '<span class="tag-bad">Não foi possível gerar a imagem.</span>'; erroPDF('gerar a imagem', e); });
+}
+function prepararPDF(r, raiz = document) {
+  atualizarPainel(r.id, raiz);
+  if (pdfCache[r.id]) return;
   setTimeout(() => {
-    try { pronto(montarPDF(r)); } catch (e) { if (st()) st().innerHTML = '<span class="tag-bad">Erro ao montar o PDF.</span>'; erroPDF('montar o PDF', e); }
+    try { montarPDF(r); atualizarPainel(r.id, raiz); }
+    catch (e) { const st = $('[data-st]', raiz); if (st) st.innerHTML = '<span class="tag-bad">Erro ao montar o PDF.</span>'; erroPDF('montar o PDF', e); }
   }, 60);
 }
 function montarPDF(r) {
@@ -1510,12 +1533,77 @@ function montarPDF(r) {
   return (pdfCache[r.id] = {blob, nome, file: new File([blob], nome, {type: 'application/pdf'}), url: URL.createObjectURL(blob)});
 }
 function pdfDeBlob(blob, nome) { return {blob, nome, file: new File([blob], nome, {type: 'application/pdf'}), url: URL.createObjectURL(blob)}; }
-function acaoPDF(r, a) {
-  const p = pdfCache[r.id]; if (!a || !['pdf', 'share', 'abrir'].includes(a)) return;
+
+/* ---- imagem: cada página do PDF vira um JPG (pdf.js, arquivo pdf-imagem.js) ---- */
+let pdfjsPromessa = null;
+function carregarPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return pdfjsPromessa || (pdfjsPromessa = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'pdf-imagem.js?v=' + BUILD;
+    s.onload = () => window.pdfjsLib && window.pdfjsWorker ? res(window.pdfjsLib) : (pdfjsPromessa = null, rej(new Error('O arquivo pdf-imagem.js está incompleto. Envie de novo para o GitHub.')));
+    s.onerror = () => { pdfjsPromessa = null; s.remove(); rej(new Error('Arquivo pdf-imagem.js não encontrado. Envie-o para o GitHub junto com os outros arquivos.')); };
+    document.head.appendChild(s);
+  }));
+}
+function gerarImagens(chave) {
+  if (imgCache[chave]) return Promise.resolve(imgCache[chave]);
+  if (imgPromessa[chave]) return imgPromessa[chave];
+  const p = pdfCache[chave];
+  return (imgPromessa[chave] = (async () => {
+    const lib = await carregarPdfJs();
+    const doc = await lib.getDocument({data: new Uint8Array(await p.blob.arrayBuffer()), isEvalSupported: false}).promise;
+    const base = p.nome.replace(/\.pdf$/i, ''), files = [], urls = [], telas = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const pg = await doc.getPage(i), vp = pg.getViewport({scale: 2});
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await pg.render({canvasContext: ctx, viewport: vp}).promise;
+      const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.9));
+      const nome = base + (doc.numPages > 1 ? `_pag${i}` : '') + '.jpg';
+      files.push(new File([blob], nome, {type: 'image/jpeg'})); urls.push(URL.createObjectURL(blob)); telas.push(cv);
+    }
+    doc.destroy();
+    /* para baixar: as páginas emendadas numa imagem só (o Android bloqueia vários downloads de uma vez) */
+    let unica = files.length === 1 ? {file: files[0], url: urls[0]} : null;
+    const alt = telas.reduce((t, c) => t + c.height, 0) + 12 * (telas.length - 1);
+    if (!unica && alt <= 16000) {
+      const cv = document.createElement('canvas'); cv.width = telas[0].width; cv.height = alt;
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#CBD5E1'; ctx.fillRect(0, 0, cv.width, cv.height);
+      let y = 0; telas.forEach(c => { ctx.drawImage(c, 0, y); y += c.height + 12; });
+      const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.88));
+      unica = {file: new File([blob], base + '.jpg', {type: 'image/jpeg'}), url: URL.createObjectURL(blob)};
+    }
+    return (imgCache[chave] = {files, urls, unica});
+  })().catch(e => { delete imgPromessa[chave]; throw e; }));
+}
+function baixarURL(url, nome) { const el = document.createElement('a'); el.href = url; el.download = nome; el.rel = 'noopener'; document.body.appendChild(el); el.click(); el.remove(); }
+
+function acaoPDF(r, a, raiz = document) {
+  if (a === 'fmt-pdf' || a === 'fmt-img') {
+    formatoSaida = a.slice(4); try { localStorage.setItem('formato-saida', formatoSaida); } catch {}
+    return atualizarPainel(r.id, raiz);
+  }
+  if (!a || !['pdf', 'share', 'abrir'].includes(a)) return;
+  const p = pdfCache[r.id];
   if (!p) return toast('Aguarde, o PDF ainda está sendo preparado…');
+  if (formatoSaida === 'img') {
+    const im = imgCache[r.id]; if (!im) return toast('Aguarde, a imagem ainda está sendo preparada…');
+    if (a === 'pdf') {
+      try {
+        if (im.unica) { baixarURL(im.unica.url, im.unica.file.name); toast('Baixando… a imagem vai para a pasta Download'); }
+        else { im.files.forEach((f, i) => baixarURL(im.urls[i], f.name)); toast('Baixando as páginas… vão para a pasta Download'); }
+      } catch (e) { erroPDF('baixar a imagem', e); }
+    } else if (a === 'share') {
+      navigator.share({files: im.files}).catch(e => { if (e && e.name !== 'AbortError') erroPDF('compartilhar', e); });
+    } else if (a === 'abrir') {
+      modal(`<h3>Relatório em imagem</h3><p class="note" style="margin-top:0">${im.files.length} página(s). Toque e segure numa página para salvar ou copiar.</p>
+        ${im.urls.map(u => `<img src="${u}" style="width:100%;display:block;border:1px solid var(--line);border-radius:6px;margin-bottom:8px">`).join('')}
+        <button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`, {wide: true});
+    }
+    return;
+  }
   if (a === 'pdf') {
-    try { const el = document.createElement('a'); el.href = p.url; el.download = p.nome; el.rel = 'noopener';
-      document.body.appendChild(el); el.click(); el.remove(); toast('Baixando… o PDF vai para a pasta Download'); }
+    try { baixarURL(p.url, p.nome); toast('Baixando… o PDF vai para a pasta Download'); }
     catch (e) { erroPDF('baixar o PDF', e); }
   } else if (a === 'share') {
     navigator.share({files: [p.file]}).catch(e => { if (e && e.name !== 'AbortError') erroPDF('compartilhar', e); });
@@ -1561,12 +1649,9 @@ async function telaMais() {
     <div class="row"><button class="btn btn-p" id="bt-bkp">Fazer cópia de segurança</button><button class="btn btn-s" id="bt-rest">Restaurar cópia</button></div>
     <input type="file" id="in-rest" accept=".json,application/json" hidden></div>
   <div class="card"><h2>Informações</h2><div class="kv"><b>Registros salvos</b><span>${regs.length}</span>
-    <b>Armazenamento protegido</b><span>${persist ? 'Sim' : 'Não (instale o app na tela inicial)'}</span><b>Versão</b><span>${VERSAO_APP}</span>
-    <b>Funcionando offline</b><span id="sw-st">verificando…</span></div>
-    ${instalarBanner()}</div>
+    <b>Armazenamento protegido</b><span>${persist ? 'Sim' : 'Não'}</span><b>Versão</b><span>${VERSAO_APP}</span></div></div>
   <div class="card"><h2>Limpar registros antigos</h2><p class="note" style="margin-top:0">Apaga do tablet os registros com mais de 12 meses. Os PDFs já salvos na pasta Download não são apagados. Faça uma cópia de segurança antes.</p>
     <button class="btn btn-d btn-w" id="bt-limpar">Apagar registros com mais de 12 meses</button></div>`;
-  navigator.serviceWorker && navigator.serviceWorker.getRegistration ? navigator.serviceWorker.getRegistration().then(g => { $('#sw-st').textContent = g && g.active ? 'Sim' : 'Não (abra pelo endereço do site)'; }) : ($('#sw-st').textContent = 'Não');
   if ($('#sy-salvar')) $('#sy-salvar').onclick = async () => {
     const novo = {url: $('#sy-url').value.trim(), chave: $('#sy-chave').value.trim(), tablet: $('#sy-tab').value.trim()};
     if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(novo.url)) return toast('Cole o endereço do App da Web (começa com https://script.google.com/)');
@@ -1581,8 +1666,23 @@ async function telaMais() {
   if ($('#sy-link')) $('#sy-link').onclick = async () => {
     if (!(await exigirAdmin('gerar o link de configuração'))) return;
     const link = linkConfig(cfg);
-    if (navigator.share) { try { await navigator.share({title: 'Configurar Checklists', text: 'Abra este link no aparelho para ligá-lo à nuvem dos Checklists: ' + link}); return; } catch (e) { if (e.name === 'AbortError') return; } }
-    try { await navigator.clipboard.writeText(link); toast('Link copiado'); } catch { modal(`<h3>Link de configuração</h3><p style="word-break:break-all">${esc(link)}</p><button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Fechar</button>`); }
+    const ov = modal(`<h3>Link para configurar outro aparelho</h3>
+      <p class="note" style="margin-top:0">Abra este link no outro tablet ou celular. Ele já vem com a configuração da nuvem.</p>
+      <textarea id="lk-txt" readonly rows="4" style="width:100%;font-size:13px;word-break:break-all">${esc(link)}</textarea>
+      <div class="row" style="margin-top:12px"><button class="btn btn-p" data-l="copiar">Copiar link</button>
+        <button class="btn btn-a" data-l="share" ${navigator.share ? '' : 'disabled'}>Compartilhar</button></div>
+      <button class="btn btn-s btn-w" style="margin-top:10px" data-l="fechar">Fechar</button>`);
+    ov.addEventListener('click', async e => {
+      const a = e.target.closest('[data-l]')?.dataset.l; if (!a) return;
+      if (a === 'fechar') return ov.remove();
+      if (a === 'copiar') {
+        let ok = false;
+        try { await navigator.clipboard.writeText(link); ok = true; } catch {}
+        if (!ok) { const t = $('#lk-txt', ov); t.focus(); t.select(); t.setSelectionRange(0, link.length); try { ok = document.execCommand('copy'); } catch {} }
+        toast(ok ? 'Link copiado ✓ Cole no WhatsApp, e-mail ou Teams' : 'Não deu para copiar sozinho: toque e segure no link e escolha Copiar');
+      }
+      if (a === 'share') { try { await navigator.share({title: 'Configurar Checklists', text: 'Abra este link no aparelho para ligá-lo à nuvem dos Checklists: ' + link}); } catch (e2) { if (e2.name !== 'AbortError') toast('Não foi possível compartilhar. Use Copiar link.'); } }
+    });
   };
   if ($('#sy-off')) $('#sy-off').onclick = async () => { if (!(await exigirAdmin('desligar a sincronização'))) return; if (await confirmar('Desligar a sincronização?', 'Os registros continuam neste aparelho, mas não serão mais enviados.', 'Desligar', true)) { try { localStorage.removeItem('sync-config'); } catch {} escopoHist = 'local'; telaMais(); } };
   $('#bt-csv').onclick = () => exportarCSV(regs, $('#e-cl').value, $('#e-de').value, $('#e-ate').value);
@@ -1606,7 +1706,7 @@ async function telaMais() {
     if (!(await confirmar('Apagar registros antigos?', `${velhos.length} registro(s) serão apagados do tablet. Isso não pode ser desfeito.`, 'Apagar', true))) return;
     for (const r of velhos) await DB.del('registros', r.id); toast('Registros antigos apagados'); telaMais();
   };
-  $('#app').onclick = async e => { if (e.target.id === 'bt-inst') instalar(); if (e.target.closest('[data-cad]')) { if (await pedirAparelho()) telaMais(); } };
+  $('#app').onclick = async e => { if (e.target.closest('[data-cad]')) { if (await pedirAparelho()) telaMais(); } };
 }
 /* uma linha por resposta (usada na planilha exportada e na aba Respostas do Google) */
 function linhasRegistro(r) {
@@ -1862,32 +1962,41 @@ async function telaGerenciar() {
   };
 }
 
-/* ================= instalação (PWA) ================= */
-let promptInstalar = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; });
-function instalarBanner() {
-  const inst = window.matchMedia('(display-mode: standalone)').matches;
-  if (inst) return '';
-  return `<div class="card" style="margin-top:14px;background:#FFF7DB;border-color:#F3D46B"><b>Dica:</b> instale este app na tela inicial do tablet para ele abrir sem internet e proteger os registros.
-    <button class="btn btn-p btn-w" id="bt-inst" style="margin-top:10px">Instalar na tela inicial</button></div>`;
-}
-async function instalar() {
-  if (promptInstalar) { promptInstalar.prompt(); await promptInstalar.userChoice; promptInstalar = null; }
-  else modal(`<h3>Instalar na tela inicial</h3><p>No Chrome, toque nos <b>três pontinhos ⋮</b> no canto superior direito e escolha <b>“Instalar app”</b> ou <b>“Adicionar à tela inicial”</b>.</p><button class="btn btn-p btn-w" onclick="this.closest('.ov').remove()">Entendi</button>`);
-}
-
 /* ================= service worker (offline) ================= */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').then(reg => {
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw && nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão instalada. Feche e abra o app para atualizar.', 5000);
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) toast('Atualizando o app…', 3000);
       });
     });
+    reg.update().catch(() => {});
   }).catch(() => {});
+  /* quando a versão nova assume, recarrega uma vez para já usar os arquivos novos (sem perder rascunhos: eles ficam salvos) */
+  let recarregou = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (recarregou || /^#\/form\//.test(location.hash)) return;
+    recarregou = true; location.reload();
+  });
 }
 
+/* ===== compatibilidade e conferência de versão ===== */
+const BUILD = '2.6.0';
+(function () {
+  const g = CHECKLISTS.find(c => c.id === 'granulometria');
+  if (g) {
+    g.origens = g.origens || ['K1 Principal', 'K1 Emergência', 'K1 Parado', 'K2 Principal', 'K2 Emergência', 'K2 Parado'];
+    if (!g.campos.includes('origem')) g.campos.splice(g.campos.indexOf('material') + 1, 0, 'origem');
+  }
+  const v = $('#ver-app'); if (v) v.textContent = 'versão ' + BUILD;
+  if (typeof VERSAO_APP !== 'undefined' && VERSAO_APP !== BUILD) {
+    const aviso = document.createElement('div');
+    aviso.style.cssText = 'background:#FEE2E2;color:#991B1B;padding:10px 16px;font-size:14px;font-weight:600;text-align:center';
+    aviso.textContent = `Atualização incompleta: index.html está na versão ${BUILD} e checklists.js na ${VERSAO_APP}. Envie TODOS os arquivos do zip para o GitHub.`;
+    document.body.insertBefore(aviso, document.body.firstChild.nextSibling);
+  }
+})();
 rota();
 </script>
 </body>
